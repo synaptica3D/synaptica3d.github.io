@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Synaptica</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-20 -20 40 40'%3E%3Cpath d='M-6,-12 A12,12 0 0 0 -6,12' fill='none' stroke='%23f8b56b' stroke-width='2.8' stroke-linecap='round'/%3E%3Cpath d='M6,-12 A12,12 0 0 1 6,12' fill='none' stroke='%237cc6fe' stroke-width='2.8' stroke-linecap='round'/%3E%3Ccircle cx='-1' cy='-4.5' r='1.8' fill='%23a3e635'/%3E%3Ccircle cx='1' cy='0' r='1.8' fill='%23a3e635'/%3E%3Ccircle cx='-1' cy='4.5' r='1.8' fill='%23a3e635'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0f1d;--panel:#10182b;--panel2:#172240;--line:#24324f;--text:#e8edf7;--muted:#97a4bf;--accent:#5eead4;--warm:#f8b56b;--pink:#f472b6}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:radial-gradient(1200px 800px at 60% 25%,#172345 0%,#0a0f1d 62%) fixed;color:var(--text);font:14px/1.5 Inter,system-ui,sans-serif;overflow:hidden}
+h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:.2px;margin:0}
+header{height:58px;display:flex;align-items:center;gap:22px;padding:0 18px;border-bottom:1px solid var(--line);background:rgba(10,15,29,.9);position:relative;z-index:10}
+.brand{font-family:Fraunces,serif;font-size:21px;font-weight:600;white-space:nowrap;display:flex;align-items:center;gap:10px;cursor:pointer}
+nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+nav button{background:none;border:0;color:var(--muted);font:500 14px Inter,sans-serif;padding:9px 14px;border-radius:8px;cursor:pointer;white-space:nowrap}
+nav button:hover{color:var(--text);background:rgba(255,255,255,.04)}
+nav button.on{color:var(--text);background:var(--panel2);box-shadow:inset 0 -2px 0 var(--accent)}
+#app{display:grid;grid-template-columns:290px 1fr 360px;height:calc(100vh - 58px)}
+#side,#info{overflow-y:auto;padding:18px;background:rgba(14,21,38,.82)}
+#side{border-right:1px solid var(--line)}
+#info{border-left:1px solid var(--line)}
+#stage{position:relative;overflow:hidden;min-height:320px}
+#gl{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#gl:active{cursor:grabbing}
+#labels,.layer{position:absolute;inset:0;pointer-events:none}
+.lbl{position:absolute;left:0;top:0;font-size:11.5px;font-weight:500;padding:2px 8px;border-radius:999px;background:rgba(10,15,29,.8);border:1px solid rgba(255,255,255,.14);white-space:nowrap;color:var(--text)}
+.lbl::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--c,#fff);margin-right:6px;vertical-align:1px}
+#tip{position:absolute;pointer-events:none;background:#0b1222;border:1px solid var(--line);border-radius:8px;padding:4px 9px;font-size:12px;display:none;z-index:4;white-space:nowrap}
+#hint{position:absolute;left:50%;top:12px;transform:translateX(-50%);font-size:12px;color:var(--muted);background:rgba(10,15,29,.7);border:1px solid var(--line);padding:5px 12px;border-radius:999px;pointer-events:none;white-space:nowrap}
+.hud{position:absolute;left:14px;bottom:14px;right:14px;display:none;gap:12px;align-items:flex-end;pointer-events:none;flex-wrap:wrap}
+.hud.on{display:flex}
+.hud>*{pointer-events:auto}
+.card{background:rgba(12,19,35,.9);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.hud canvas{display:block}
+.phase{max-width:420px}
+.phase h3{font-size:16px;margin-bottom:4px}
+.phase p{margin:0;color:var(--muted);font-size:13px}
+.sec{margin-bottom:20px}
+.sec>h3{font-family:Inter,sans-serif;font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:600}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+.btn{background:var(--panel2);border:1px solid var(--line);color:var(--text);font:500 13px Inter,sans-serif;padding:7px 11px;border-radius:8px;cursor:pointer}
+.btn:hover{border-color:#3b4d75}
+.btn.on{border-color:var(--accent);color:var(--accent);background:rgba(94,234,212,.08)}
+.btn.big{padding:10px 14px;font-weight:600;background:var(--accent);color:#06221d;border-color:var(--accent)}
+.btn.big:disabled{opacity:.45;cursor:not-allowed}
+.btn.full{width:100%;text-align:left}
+input[type=search]{width:100%;background:#0b1222;border:1px solid var(--line);color:var(--text);padding:9px 11px;border-radius:8px;font:14px Inter,sans-serif;margin-bottom:10px}
+.tog{display:flex;align-items:center;justify-content:space-between;padding:6px 0;cursor:pointer;user-select:none}
+.tog input{accent-color:#5eead4;width:16px;height:16px}
+.range{display:flex;align-items:center;gap:10px;padding:4px 0}
+.range input{flex:1;accent-color:#5eead4}
+.range span{width:42px;text-align:right;color:var(--muted);font-size:12px}
+.list .grp{font-size:11px;color:var(--muted);margin:12px 0 4px;letter-spacing:.8px;text-transform:uppercase}
+.item{display:flex;align-items:center;gap:9px;padding:6px 8px;border-radius:7px;cursor:pointer}
+.item:hover{background:rgba(255,255,255,.05)}
+.item.on{background:rgba(94,234,212,.12)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+.tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;padding:3px 9px;border-radius:999px;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c);margin-bottom:10px}
+#info h2{font-size:24px;margin-bottom:8px;line-height:1.2}
+#info .lead{color:#cfd7e8;margin:0 0 16px}
+#info h4{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);margin:16px 0 6px}
+#info ul{margin:0;padding-left:18px}
+#info li{margin:4px 0}
+.fact{margin-top:16px;padding:10px 12px;border-left:3px solid var(--warm);background:rgba(248,181,107,.07);border-radius:0 8px 8px 0;font-size:13px}
+.muted{color:var(--muted)}
+.steps .item{align-items:flex-start}
+.steps .num{width:22px;height:22px;border-radius:50%;background:var(--panel2);border:1px solid var(--line);display:grid;place-items:center;font-size:11px;flex:none}
+.steps .item.on .num{background:var(--accent);color:#06221d;border-color:var(--accent)}
+.legend{display:grid;grid-template-columns:auto 1fr;gap:6px 9px;align-items:center;font-size:13px}
+/* history */
+#history,#about{height:calc(100vh - 58px);overflow-y:auto;display:none;padding:34px 24px 60px}
+#history.on,#about.on{display:block}
+.about h2{font-size:22px;margin:30px 0 10px}
+.about p,.about li{color:#cfd7e8;max-width:680px}
+.about .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:6px}
+.about .grid .card{cursor:pointer}
+.about .grid .card:hover{border-color:#3b4d75}
+.about .grid h3{font-size:17px;margin-bottom:4px}
+.about .grid p{margin:0;font-size:13px;color:var(--muted)}
+.hwrap{max-width:900px;margin:0 auto}
+.hwrap>h1{font-size:34px;margin-bottom:6px}
+.hwrap>p{color:var(--muted);margin:0 0 20px;max-width:640px}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:26px}
+.tl{position:relative;padding-left:34px}
+.tl::before{content:"";position:absolute;left:11px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--accent),var(--pink),var(--warm))}
+.ev{position:relative;margin-bottom:14px;cursor:pointer}
+.ev::before{content:"";position:absolute;left:-29px;top:18px;width:12px;height:12px;border-radius:50%;background:var(--bg);border:2px solid var(--c)}
+.ev .card{transition:border-color .2s}
+.ev:hover .card{border-color:#3b4d75}
+.ev .yr{font-family:Fraunces,serif;font-size:13px;color:var(--c)}
+.ev h3{font-size:18px;margin:2px 0 4px}
+.ev .who{color:var(--muted);font-size:13px}
+.ev .more{display:none;margin-top:10px;color:#cfd7e8}
+.ev.open .more{display:block}
+.ev .go{margin-top:10px}
+@media (max-width:980px){
+  body{overflow:auto}
+  #app{grid-template-columns:1fr;height:auto}
+  #stage{order:1;height:62vh}
+  #info{order:2;border-left:0;border-top:1px solid var(--line)}
+  #side{order:3;border-right:0;border-top:1px solid var(--line)}
+  #history,#about{height:auto}
+  .hud{flex-direction:column;align-items:stretch}
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand" id="brand"><svg width="26" height="26" viewBox="-20 -20 40 40" aria-hidden="true" style="flex:none"><path d="M-6,-12 A12,12 0 0 0 -6,12" fill="none" stroke="#f8b56b" stroke-width="2.8" stroke-linecap="round"/><path d="M6,-12 A12,12 0 0 1 6,12" fill="none" stroke="#7cc6fe" stroke-width="2.8" stroke-linecap="round"/><circle cx="-1" cy="-4.5" r="1.8" fill="#a3e635"/><circle cx="1" cy="0" r="1.8" fill="#a3e635"/><circle cx="-1" cy="4.5" r="1.8" fill="#a3e635"/></svg><span>Synaptica</span></div>
+  <nav id="nav">
+    <button data-tab="history">History</button>
+    <button data-tab="action-potential">Action Potential</button>
+    <button data-tab="neurons">Types of Neurons</button>
+    <button data-tab="about">About</button>
+  </nav>
+</header>
+<main id="app">
+  <aside id="side"></aside>
+  <section id="stage">
+    <canvas id="gl"></canvas>
+    <div id="labels"></div>
+    <div id="tip"></div>
+    <div id="hint">Drag to rotate · scroll or pinch to zoom · right-drag to pan · click anything</div>
+  </section>
+  <aside id="info"></aside>
+</main>
+<section id="history"><div class="hwrap" id="hwrap"></div></section>
+<section id="about"><div class="hwrap about">
+  <div style="display:flex;align-items:center;gap:16px;margin-bottom:10px"><svg width="56" height="56" viewBox="-20 -20 40 40" aria-hidden="true" style="flex:none"><path d="M-6,-12 A12,12 0 0 0 -6,12" fill="none" stroke="#f8b56b" stroke-width="2.8" stroke-linecap="round"/><path d="M6,-12 A12,12 0 0 1 6,12" fill="none" stroke="#7cc6fe" stroke-width="2.8" stroke-linecap="round"/><circle cx="-1" cy="-4.5" r="1.8" fill="#a3e635"/><circle cx="1" cy="0" r="1.8" fill="#a3e635"/><circle cx="-1" cy="4.5" r="1.8" fill="#a3e635"/></svg><h1 style="font-size:38px">Synaptica</h1></div>
+  <p style="font-size:16px">Synaptica is a free, interactive encyclopedia of neuroscience. Instead of just reading about a neuron, you can spin one around, click on its parts, and watch a signal move through it.</p>
+  <h2>What's inside</h2>
+  <div class="grid">
+    <div class="card" data-go="history"><h3>History</h3><p>From ancient Egypt to optogenetics: the people and experiments that built the field.</p></div>
+    <div class="card" data-go="action-potential"><h3>Action Potential</h3><p>Fire an axon, watch ions cross the membrane, and see why the signal is all-or-none.</p></div>
+    <div class="card" data-go="neurons"><h3>Types of Neurons</h3><p>Five neuron shapes in 3D, with every part clickable and a signal you can fire.</p></div>
+  </div>
+  <h2>How to use it</h2>
+  <ul><li>Drag to rotate, scroll or pinch to zoom, and right-drag to pan.</li><li>Click any part of a model to read what it does in the side panel.</li><li>Try the experiments: change the stimulus strength, switch to a myelinated axon, or fire a neuron.</li></ul>
+  <h2>A note on accuracy</h2>
+  <p>The 3D models are simplified teaching models, not microscope data. Sizes and speeds are exaggerated or slowed down so you can actually see what is happening. Use Synaptica alongside your textbook and lectures, not instead of them.</p>
+  <h2>Coming soon</h2>
+  <p>A 3D brain atlas and an interactive walkthrough of synaptic transmission.</p>
+  <p class="muted" style="font-size:12px;margin-top:30px">Built with three.js.</p>
+</div></section>
+
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+/* ===== ANALYTICS SETUP: paste your GoatCounter code between the quotes (e.g. "akneuro") ===== */
+window.GOATCOUNTER_CODE = "synaptica";
+/* ========================================================================================== */
+(function(){
+  var c=window.GOATCOUNTER_CODE;
+  if(!c||c==="YOURCODE")return;
+  window.goatcounter={no_onload:true};
+  var s=document.createElement("script");s.async=true;s.src="https://gc.zgo.at/count.js";
+  s.setAttribute("data-goatcounter","https://"+c+".goatcounter.com/count");
+  document.head.appendChild(s);
+})();
+function gcTrack(path,title,isEvent){
+  if(!window.GOATCOUNTER_CODE||window.GOATCOUNTER_CODE==="YOURCODE")return;
+  var tries=0;(function go(){
+    if(window.goatcounter&&window.goatcounter.count){window.goatcounter.count({path:path,title:title,event:!!isEvent});return;}
+    if(++tries<40)setTimeout(go,250);
+  })();
+}
+</script>
+<script>
+(function(){
+"use strict";
+/* ---------------- helpers ---------------- */
+const $=s=>document.querySelector(s);
+const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!=null)e.innerHTML=html;return e;};
+function rng(seed){return function(){seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const V3=(x,y,z)=>new THREE.Vector3(x,y,z);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const ease=t=>{t=clamp(t,0,1);return t*t*(3-2*t);};
+const lerp=(a,b,t)=>a+(b-a)*t;
+const hex=c=>'#'+c.toString(16).padStart(6,'0');
+
+/* ---------------- renderer + modules ---------------- */
+const canvas=$('#gl'), stage=$('#stage'), labelsEl=$('#labels'), tip=$('#tip');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true,alpha:true});
+renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
+renderer.outputEncoding=THREE.sRGBEncoding;
+const modules={}; let active=null;
+
+function makeScene(){
+  const s=new THREE.Scene();
+  s.add(new THREE.HemisphereLight(0xe6eeff,0x1c2236,0.85));
+  const d=new THREE.DirectionalLight(0xffffff,0.95);d.position.set(3,5,4);s.add(d);
+  const d2=new THREE.DirectionalLight(0x9ab8ff,0.45);d2.position.set(-4,-1,-3);s.add(d2);
+  const d3=new THREE.DirectionalLight(0xffe2c4,0.25);d3.position.set(0,-4,3);s.add(d3);
+  return s;
+}
+function Module(name,camPos,target){
+  const m={name,scene:makeScene(),camera:new THREE.PerspectiveCamera(38,1,0.01,200),labels:[],pickables:[],
+    layer:el('div','layer'),showLabels:true,selected:null,hover:null,info:{},tween:null,side:el('div'),hud:null};
+  m.camera.position.copy(camPos);
+  m.controls=new THREE.OrbitControls(m.camera,canvas);
+  m.controls.target.copy(target);m.controls.enableDamping=true;m.controls.dampingFactor=0.08;m.controls.enabled=false;
+  m.controls.update();
+  labelsEl.appendChild(m.layer);m.layer.style.display='none';
+  modules[name]=m;return m;
+}
+function addPick(m,parent,mesh,id){mesh.userData.id=id;m.pickables.push(mesh);parent.add(mesh);return mesh;}
+function addLabel(m,text,pos,color,vis){
+  const e=el('div','lbl');e.textContent=text;e.style.setProperty('--c',color||'#fff');m.layer.appendChild(e);
+  const L={el:e,pos,vis};m.labels.push(L);return L;
+}
+function clearLabels(m){m.labels.forEach(l=>l.el.remove());m.labels=[];}
+const _p=new THREE.Vector3();
+function updateLabels(m){
+  const show=m.showLabels;m.layer.style.display=show?'block':'none';if(!show)return;
+  const w=stage.clientWidth,h=stage.clientHeight;
+  for(const L of m.labels){
+    if(L.vis&&!L.vis()){L.el.style.display='none';continue;}
+    _p.copy(typeof L.pos==='function'?L.pos():L.pos).project(m.camera);
+    if(_p.z>1||_p.z<-1){L.el.style.display='none';continue;}
+    L.el.style.display='block';
+    L.el.style.transform=`translate(${(_p.x*.5+.5)*w-6}px,${(-_p.y*.5+.5)*h-10}px)`;
+  }
+}
+function tweenTo(m,pos,target,dur){
+  m.tween={p0:m.camera.position.clone(),p1:pos.clone(),t0:m.controls.target.clone(),t1:target.clone(),t:0,d:dur||0.8};
+}
+function runTween(m,dt){
+  const T=m.tween;if(!T)return;T.t+=dt/T.d;const k=ease(T.t);
+  m.camera.position.lerpVectors(T.p0,T.p1,k);m.controls.target.lerpVectors(T.t0,T.t1,k);
+  if(T.t>=1)m.tween=null;
+}
+function applyHighlights(m){
+  for(const o of m.pickables){
+    const mat=o.material;if(!mat.emissive)continue;
+    const id=o.userData.id;let e=o.userData.baseEm||0;
+    if(id===m.selected)e=0x7a5200;else if(id===m.hover)e=0x2e2e2e;
+    mat.emissive.setHex(e);
+  }
+}
+function resize(){
+  const w=stage.clientWidth,h=stage.clientHeight;if(!w||!h)return;
+  renderer.setSize(w,h,false);
+  const a=w/h,hf=Math.atan(Math.tan(19*Math.PI/180)*1.6);const vf=a<1.6?Math.min(72,2*Math.atan(Math.tan(hf)/a)*180/Math.PI):38;
+  for(const k in modules){modules[k].camera.aspect=a;modules[k].camera.fov=vf;modules[k].camera.updateProjectionMatrix();}
+}
+new ResizeObserver(resize).observe(stage);window.addEventListener('resize',resize);
+
+/* picking */
+const ray=new THREE.Raycaster(),ndc=new THREE.Vector2();let down=null;
+function visibleChain(o){while(o){if(!o.visible)return false;o=o.parent;}return true;}
+function pick(e){
+  const r=canvas.getBoundingClientRect();
+  ndc.set(((e.clientX-r.left)/r.width)*2-1,-((e.clientY-r.top)/r.height)*2+1);
+  ray.setFromCamera(ndc,active.camera);
+  const objs=active.pickables.filter(o=>visibleChain(o)&&(o.userData.pickAlways||o.material.opacity>0.3));
+  const hits=ray.intersectObjects(objs,false);
+  return hits.length?hits[0].object:null;
+}
+canvas.addEventListener('pointerdown',e=>{down=[e.clientX,e.clientY];});
+canvas.addEventListener('pointerup',e=>{
+  if(!down||!active)return;const d=Math.hypot(e.clientX-down[0],e.clientY-down[1]);down=null;if(d>6)return;
+  const o=pick(e);active.onPick&&active.onPick(o?o.userData.id:null);
+});
+canvas.addEventListener('pointermove',e=>{
+  if(!active||e.buttons){tip.style.display='none';return;}
+  const o=pick(e);const id=o?o.userData.id:null;active.hover=id;
+  if(id&&active.info[id]){const r=stage.getBoundingClientRect();tip.textContent=active.info[id].name;tip.style.display='block';
+    tip.style.left=(e.clientX-r.left+14)+'px';tip.style.top=(e.clientY-r.top+12)+'px';canvas.style.cursor='pointer';}
+  else{tip.style.display='none';canvas.style.cursor='';}
+});
+canvas.addEventListener('pointerleave',()=>{tip.style.display='none';if(active)active.hover=null;});
+
+/* info panel */
+const info=$('#info');
+function showInfo(o){
+  if(!o){return;}
+  let h=`<div class="tag" style="--c:${o.color||'#5eead4'}">${o.group||''}</div><h2>${o.name}</h2>`;
+  if(o.lead)h+=`<p class="lead">${o.lead}</p>`;
+  if(o.does)h+=`<h4>What it does</h4><ul>${o.does.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+  if(o.wrong)h+=`<h4>When it goes wrong</h4><ul>${o.wrong.map(x=>`<li>${x}</li>`).join('')}</ul>`;
+  if(o.extra)h+=o.extra;
+  if(o.fact)h+=`<div class="fact"><b>Quick fact:</b> ${o.fact}</div>`;
+  info.innerHTML=h;info.scrollTop=0;
+}
+
+/* ======================================================================
+   1. BRAIN ATLAS
+   ====================================================================== */
+const atlas=Module('atlas',V3(3.6,1.3,2.6),V3(0,0.15,0));
+atlas.showLabels=true;
+const COL={frontal:0xf2a7a0,parietal:0xf7d08a,temporal:0x9fd8b5,occipital:0xa9c1f5,cerebellum:0xd8a8ea,midbrain:0xf0b98a,pons:0xe9c9a8,medulla:0xdcb48f,spinal:0xcfd6e0,
+  thalamus:0x6fa8ff,hypothalamus:0xff9f7a,pituitary:0xffcf5c,pineal:0xc9a0dc,visual:0xfff3a8,hippocampus:0xffc857,amygdala:0xef476f,basal:0x7ed69a,callosum:0xf1efe6,ventricles:0x5ec8f2};
+const GROUPS=[
+  ['Cerebral cortex',['frontal','parietal','temporal','occipital','callosum']],
+  ['Limbic & basal ganglia',['hippocampus','amygdala','basal']],
+  ['Diencephalon & glands',['thalamus','hypothalamus','pituitary','pineal','visual']],
+  ['Brainstem & cerebellum',['midbrain','pons','medulla','spinal','cerebellum']],
+  ['Fluid spaces',['ventricles']]
+];
+const AINFO={
+ frontal:{name:'Frontal lobe',group:'Cerebral cortex',lead:'The largest lobe, sitting behind your forehead. It is the brain\'s planner and decision-maker, and it starts every voluntary movement.',
+  does:['Executive function: planning, working memory, impulse control, decision making (prefrontal cortex)','Voluntary movement: the primary motor cortex runs along the precentral gyrus, just in front of the central sulcus','Speech production: Broca\'s area, usually in the left inferior frontal gyrus','Personality and social behavior'],
+  wrong:['Broca\'s (expressive) aphasia: halting, effortful speech with fairly intact comprehension','Weakness on the opposite side of the body after motor cortex damage','Disinhibition and personality change, the classic case being Phineas Gage (1848)'],
+  fact:'The prefrontal cortex is one of the last brain regions to finish maturing, continuing to develop into the mid 20s.'},
+ parietal:{name:'Parietal lobe',group:'Cerebral cortex',lead:'Sits on top and toward the back. It builds your sense of touch and your map of where things are in space.',
+  does:['Primary somatosensory cortex on the postcentral gyrus (touch, temperature, pain, body position)','Spatial attention and awareness of the body in space','Integrating senses to guide movement (reaching, grasping)','Math and reading skills involve the left angular and supramarginal gyri'],
+  wrong:['Hemispatial neglect, usually after right parietal damage: patients ignore the left side of space','Gerstmann syndrome (left angular gyrus): trouble with writing, arithmetic, finger naming and left/right'],
+  fact:'The somatosensory cortex is laid out as a "homunculus": hands, lips and tongue get huge areas, the back gets very little.'},
+ temporal:{name:'Temporal lobe',group:'Cerebral cortex',lead:'Sits on the side of the head, below the lateral (Sylvian) fissure. Hearing, language comprehension and memory live here.',
+  does:['Primary auditory cortex (Heschl\'s gyrus)','Language comprehension: Wernicke\'s area, usually in the left superior temporal gyrus','Recognizing objects and faces (fusiform gyrus on the underside)','Its medial part holds the hippocampus and amygdala (memory and emotion)'],
+  wrong:['Wernicke\'s (receptive) aphasia: fluent speech that doesn\'t make sense, poor comprehension','Temporal lobe epilepsy, the most common focal epilepsy in adults','Prosopagnosia (face blindness) with fusiform damage'],
+  fact:'Henry Molaison (patient H.M.) lost the ability to form new long-term memories after both medial temporal lobes were removed in 1953.'},
+ occipital:{name:'Occipital lobe',group:'Cerebral cortex',lead:'The back of the brain, devoted almost entirely to vision.',
+  does:['Primary visual cortex (V1) lines the calcarine sulcus','Higher visual areas process color, motion and shape','Each side processes the opposite half of the visual field'],
+  wrong:['Contralateral homonymous hemianopia: losing the same half of the visual field in both eyes','Cortical blindness when both sides are damaged'],
+  fact:'Hubel and Wiesel found V1 neurons that fire for edges at specific orientations, work that earned the 1981 Nobel Prize.'},
+ callosum:{name:'Corpus callosum',group:'White matter',lead:'A thick C-shaped bridge of axons connecting the left and right hemispheres.',
+  does:['Carries roughly 200 million axons between the hemispheres','Lets the two sides share sensory, motor and cognitive information'],
+  wrong:['Split-brain patients (callosum cut to treat severe epilepsy) can\'t name an object seen only by the right hemisphere','Agenesis of the corpus callosum is a developmental condition where it never forms'],
+  fact:'Roger Sperry won the 1981 Nobel Prize partly for split-brain research done with Michael Gazzaniga.'},
+ hippocampus:{name:'Hippocampus',group:'Limbic system',lead:'A curved, seahorse-shaped structure tucked inside the medial temporal lobe.',
+  does:['Forms new declarative memories (facts and events)','Spatial navigation: place cells fire when you\'re in a specific location','Consolidation: helps move memories into long-term cortical storage'],
+  wrong:['One of the first regions damaged in Alzheimer\'s disease','Very vulnerable to lack of oxygen and to chronic stress','Anterograde amnesia when removed on both sides (H.M.)'],
+  fact:'The name comes from the Greek for seahorse. Adult neurogenesis in the human hippocampus is still actively debated.'},
+ amygdala:{name:'Amygdala',group:'Limbic system',lead:'An almond-shaped cluster of nuclei just in front of the hippocampus.',
+  does:['Detects threats and drives fear responses','Fear conditioning: learning that a cue predicts danger','Tags memories with emotional weight'],
+  wrong:['Overactivity is linked to anxiety disorders and PTSD','Patient S.M., with bilateral amygdala damage (Urbach-Wiethe disease), shows almost no fear'],
+  fact:'It connects strongly to the hypothalamus and brainstem, which is how fear speeds your heart rate before you consciously notice danger.'},
+ basal:{name:'Basal ganglia',group:'Subcortical nuclei',lead:'Deep nuclei (caudate, putamen, globus pallidus) that work with the substantia nigra and subthalamic nucleus to select which actions to perform.',
+  does:['Action selection: the direct pathway releases wanted movements, the indirect pathway suppresses unwanted ones','Habit and reward learning (dopamine signals)','Caudate + putamen together are called the striatum'],
+  wrong:['Parkinson\'s disease: loss of dopamine neurons in the substantia nigra, causing tremor, rigidity and slowed movement','Huntington\'s disease: degeneration of the striatum (especially the caudate), causing chorea'],
+  fact:'Deep brain stimulation of the subthalamic nucleus can dramatically reduce Parkinson\'s symptoms.'},
+ thalamus:{name:'Thalamus',group:'Diencephalon',lead:'Two egg-shaped masses in the middle of the brain. Think of it as the switchboard to the cortex.',
+  does:['Relays almost every sense to the cortex (smell is the exception)','LGN = vision, MGN = hearing, VPL/VPM = touch and pain from body and face','Helps regulate sleep, arousal and attention'],
+  wrong:['Thalamic pain syndrome (Dejerine-Roussy): severe chronic pain after a thalamic stroke','Damage to some nuclei can cause coma or memory loss'],
+  fact:'The thalamus doesn\'t just pass signals along: the cortex sends even more fibers back to it, so it acts like a filter too.'},
+ hypothalamus:{name:'Hypothalamus',group:'Diencephalon',lead:'Small (about the size of an almond) but in charge of keeping your body\'s internal state stable.',
+  does:['Homeostasis: body temperature, hunger, thirst, fluid balance','Circadian rhythm (suprachiasmatic nucleus, sitting right on the optic chiasm)','Controls the pituitary gland and the autonomic nervous system'],
+  wrong:['Disrupted temperature, appetite or sleep','Hormone problems because pituitary control breaks down'],
+  fact:'Students remember its drives as the "four Fs": fighting, fleeing, feeding and mating.'},
+ pituitary:{name:'Pituitary gland',group:'Endocrine',lead:'The "master gland", hanging below the hypothalamus by a stalk.',
+  does:['Anterior lobe: GH, TSH, ACTH, FSH, LH and prolactin','Posterior lobe: releases oxytocin and ADH, which are actually made in the hypothalamus'],
+  wrong:['A pituitary tumor can press up on the optic chiasm and cause bitemporal hemianopia (loss of both outer visual fields)'],
+  fact:'It sits in a bony pocket of the skull called the sella turcica ("Turkish saddle").'},
+ pineal:{name:'Pineal gland',group:'Endocrine',lead:'A tiny gland near the back of the thalamus.',
+  does:['Secretes melatonin, mostly at night','Helps time sleep and seasonal rhythms'],
+  fact:'Descartes called it the seat of the soul, partly because it\'s one of the few unpaired structures in the brain.'},
+ visual:{name:'Optic chiasm & visual pathway',group:'Visual system',lead:'Where the two optic nerves meet and half the fibers cross. Click around: the yellow tubes trace the whole pathway from eye to occipital cortex.',
+  does:['Retina → optic nerve → optic chiasm → optic tract → LGN of thalamus → optic radiations → V1','At the chiasm, fibers from the nasal half of each retina cross; temporal fibers stay on the same side','Result: each hemisphere sees the opposite half of the visual field'],
+  wrong:['Optic nerve lesion → blindness in one eye','Chiasm lesion (e.g. pituitary tumor) → bitemporal hemianopia','Optic tract or radiation lesion → contralateral homonymous hemianopia'],
+  fact:'Lesion mapping of the visual pathway is a favorite exam question because every location gives a different visual field defect.'},
+ midbrain:{name:'Midbrain',group:'Brainstem',lead:'The top part of the brainstem, connecting the diencephalon to the pons.',
+  does:['Superior colliculi (visual reflexes, eye movements) and inferior colliculi (auditory relay)','Substantia nigra: dopamine neurons feeding the basal ganglia','Periaqueductal gray (PAG): a key hub for descending pain control','Nuclei of cranial nerves III and IV'],
+  wrong:['Loss of substantia nigra neurons underlies Parkinson\'s disease'],
+  fact:'Stimulating the PAG can produce strong analgesia, one of the discoveries that led to the idea of the body\'s own pain-control system.'},
+ pons:{name:'Pons',group:'Brainstem',lead:'The bulge of the brainstem. "Pons" is Latin for bridge.',
+  does:['Relays signals from the cortex to the cerebellum','Helps regulate breathing rhythm','Nuclei for cranial nerves V–VIII','Locus coeruleus: the brain\'s main source of norepinephrine'],
+  wrong:['Locked-in syndrome after damage to the ventral pons: fully aware but almost completely paralyzed'],
+  fact:'Much of REM sleep is generated by circuits in the pons.'},
+ medulla:{name:'Medulla oblongata',group:'Brainstem',lead:'The lowest part of the brainstem, continuous with the spinal cord.',
+  does:['Cardiovascular and respiratory control centers','Reflexes: swallowing, coughing, sneezing, vomiting','Pyramidal decussation: motor tracts cross here, which is why each hemisphere controls the opposite side','Nuclei for cranial nerves IX–XII'],
+  wrong:['Damage can be rapidly fatal because breathing and heart-rate control are here'],
+  fact:'Opioid overdose kills mainly by suppressing the breathing centers in the medulla and pons.'},
+ spinal:{name:'Spinal cord',group:'Central nervous system',lead:'The highway between brain and body (only the top is shown here).',
+  does:['Dorsal horn: receives sensory input, including the first synapse for pain','Ventral horn: holds motor neurons that drive skeletal muscle','Runs reflexes without needing the brain'],
+  wrong:['Spinal cord injury causes loss of function below the level of damage','Changes in the dorsal horn (central sensitization) contribute to chronic pain'],
+  fact:'In adults the cord ends around L1–L2, which is why lumbar punctures are done lower down.'},
+ cerebellum:{name:'Cerebellum',group:'Hindbrain',lead:'"Little brain" at the back, under the occipital lobes. Its fine ridges are called folia.',
+  does:['Coordinates movement, balance and posture','Motor learning and timing (learning to ride a bike)','Compares intended movement with actual movement and corrects errors'],
+  wrong:['Ataxia: clumsy, uncoordinated movement','Intention tremor and dysmetria (overshooting targets)','Cerebellar deficits show up on the SAME side as the damage'],
+  fact:'It holds about 80% of all the brain\'s neurons (roughly 69 of 86 billion), mostly tiny granule cells.'},
+ ventricles:{name:'Lateral ventricles',group:'CSF system',lead:'Fluid-filled cavities deep in each hemisphere, part of a connected system of four ventricles.',
+  does:['Choroid plexus produces cerebrospinal fluid (around 500 mL per day)','CSF cushions the brain and clears waste'],
+  wrong:['Hydrocephalus: CSF builds up and the ventricles expand, raising pressure on the brain'],
+  fact:'You only have about 150 mL of CSF at any time, so it gets replaced several times a day.'}
+};
+for(const k in AINFO){AINFO[k].color=hex(COL[k]);}
+atlas.info=AINFO;
+
+function noise3(x,y,z){return Math.sin(x*1.7+Math.sin(z*1.3))*Math.sin(y*1.9+Math.sin(x*1.1))*Math.sin(z*1.5+Math.sin(y*1.7));}
+const AG=new THREE.Group();atlas.scene.add(AG);
+function amat(c){return new THREE.MeshStandardMaterial({color:c,roughness:0.6,metalness:0.02,transparent:true,opacity:1});}
+const cortex=[];
+
+function buildHemisphere(side){
+  const C={x:side*0.5,y:0.3,z:0},R={x:0.48,y:0.62,z:1.15};
+  const g=new THREE.SphereGeometry(1,200,140);
+  const P=g.attributes.position,N=P.count,region=new Uint8Array(N);
+  const v=new THREE.Vector3(),nrm=new THREE.Vector3();
+  for(let i=0;i<N;i++){
+    v.fromBufferAttribute(P,i);
+    const lat=v.x*side,uy=v.y,uz=v.z;
+    const lx=lat<-0.9?-0.9+(lat+0.9)*0.05:lat;
+    let yy=uy<-0.55?-0.55+(uy+0.55)*0.7:uy;
+    // temporal pole hangs a little lower at the front-side
+    if(lat>0.2&&uz>0&&uz<0.6&&uy<-0.2)yy-=0.08*Math.sin(uz/0.6*Math.PI)*clamp((lat-0.2)*2,0,1);
+    const px=C.x+side*lx*R.x,py=C.y+yy*R.y,pz=C.z+uz*R.z;
+    nrm.set(side*lx/R.x,yy/R.y,uz/R.z).normalize();
+    const f=uy-(-0.2-uz*0.4);          // sylvian fissure line
+    const c=uz-(0.1+uy*0.28);          // central sulcus
+    const temporal=f<0&&uz>-0.66&&(uz<0.1||(lat>0.15&&uz<0.62));
+    region[i]=uz<-0.66?3:temporal?2:c>0?0:1;
+    const s=9;
+    const n1=noise3(px*s,py*s,pz*s)+0.45*noise3(px*s*2.2+1.7,py*s*2.2,pz*s*2.2+4.1);
+    let d=-0.038*Math.exp(-(n1*n1)/0.03);
+    if(lat>-0.2)d-=0.085*Math.exp(-(f*f)/0.004)*clamp((uz+0.7)*3,0,1)*clamp((0.7-uz)*3,0,1);
+    if(uy>-0.35)d-=0.05*Math.exp(-(c*c)/0.002);
+    const po=uz+0.66;d-=0.03*Math.exp(-(po*po)/0.002);
+    P.setXYZ(i,px+nrm.x*d,py+nrm.y*d,pz+nrm.z*d);
+  }
+  g.computeVertexNormals();
+  const idx=g.index.array,pos=P.array,nor=g.attributes.normal.array;
+  const B=[[],[],[],[]],NB=[[],[],[],[]];
+  for(let t=0;t<idx.length;t+=3){
+    const a=idx[t],b=idx[t+1],cc=idx[t+2];const r=region[b]===region[cc]?region[b]:region[a];
+    for(const k of [a,b,cc]){B[r].push(pos[k*3],pos[k*3+1],pos[k*3+2]);NB[r].push(nor[k*3],nor[k*3+1],nor[k*3+2]);}
+  }
+  ['frontal','parietal','temporal','occipital'].forEach((id,r)=>{
+    const bg=new THREE.BufferGeometry();
+    bg.setAttribute('position',new THREE.Float32BufferAttribute(B[r],3));
+    bg.setAttribute('normal',new THREE.Float32BufferAttribute(NB[r],3));
+    const m=addPick(atlas,AG,new THREE.Mesh(bg,amat(COL[id])),id);
+    m.userData.cortex=true;m.userData.side=side;cortex.push(m);
+  });
+  g.dispose();
+}
+buildHemisphere(1);buildHemisphere(-1);
+
+function ell(id,c,r,seg){const g=new THREE.SphereGeometry(1,seg||32,seg?Math.round(seg*0.7):22);g.scale(r[0],r[1],r[2]);const m=new THREE.Mesh(g,amat(COL[id]));m.position.set(c[0],c[1],c[2]);return addPick(atlas,AG,m,id);}
+function tube(id,pts,r,scl){const cv=new THREE.CatmullRomCurve3(pts.map(p=>V3(p[0],p[1],p[2])));const g=new THREE.TubeGeometry(cv,64,r,12,false);const m=new THREE.Mesh(g,amat(COL[id]));if(scl)m.scale.set(scl[0],scl[1],scl[2]);return addPick(atlas,AG,m,id);}
+function both(fn){fn(1);fn(-1);}
+// cerebellum with folia
+(function(){
+  const g=new THREE.SphereGeometry(1,170,110),P=g.attributes.position,v=new THREE.Vector3(),n=new THREE.Vector3();
+  for(let i=0;i<P.count;i++){
+    v.fromBufferAttribute(P,i);
+    const px=v.x*0.56,py=-0.36+v.y*0.27,pz=-0.7+v.z*0.37;
+    n.set(v.x/0.56,v.y/0.27,v.z/0.37).normalize();
+    const q=Math.sin((py+0.35*pz)*95);let d=-0.016*Math.exp(-q*q/0.06);
+    d-=0.06*Math.exp(-(v.x*v.x)/0.006)*clamp(-v.z*2+0.3,0,1);
+    P.setXYZ(i,px+n.x*d,py+n.y*d,pz+n.z*d);
+  }
+  g.computeVertexNormals();addPick(atlas,AG,new THREE.Mesh(g,amat(COL.cerebellum)),'cerebellum');
+})();
+// brainstem
+ell('midbrain',[0,-0.1,-0.12],[0.13,0.13,0.12]);
+ell('pons',[0,-0.33,-0.07],[0.15,0.13,0.13]);
+(function(){const g=new THREE.CylinderGeometry(0.11,0.075,0.34,24);const m=new THREE.Mesh(g,amat(COL.medulla));m.position.set(0,-0.58,-0.14);m.rotation.x=-0.25;addPick(atlas,AG,m,'medulla');
+ const g2=new THREE.CylinderGeometry(0.07,0.065,0.42,24);const s=new THREE.Mesh(g2,amat(COL.spinal));s.position.set(0,-0.94,-0.21);s.rotation.x=-0.12;addPick(atlas,AG,s,'spinal');})();
+// diencephalon
+both(s=>ell('thalamus',[s*0.1,0.12,-0.08],[0.09,0.09,0.17]));
+ell('hypothalamus',[0,-0.03,0.12],[0.07,0.06,0.09]);
+tube('pituitary',[[0,-0.08,0.16],[0,-0.15,0.19],[0,-0.21,0.2]],0.014);
+ell('pituitary',[0,-0.25,0.2],[0.06,0.045,0.05]);
+ell('pineal',[0,0.13,-0.3],[0.028,0.025,0.035]);
+// visual pathway
+ell('visual',[0,-0.13,0.3],[0.085,0.02,0.04]);
+both(s=>{tube('visual',[[s*0.05,-0.13,0.32],[s*0.15,-0.15,0.55],[s*0.26,-0.17,0.85]],0.022);
+  tube('visual',[[s*0.05,-0.13,0.28],[s*0.16,-0.1,0.16],[s*0.21,-0.04,-0.02],[s*0.19,0.04,-0.14]],0.02);
+  tube('visual',[[s*0.19,0.04,-0.14],[s*0.3,0.12,-0.35],[s*0.3,0.2,-0.65],[s*0.18,0.25,-0.95]],0.016);});
+// limbic + basal ganglia
+both(s=>{tube('hippocampus',[[s*0.31,-0.09,0.17],[s*0.33,-0.06,0],[s*0.3,0,-0.2],[s*0.22,0.08,-0.34],[s*0.14,0.15,-0.37]],0.042);
+  ell('amygdala',[s*0.3,-0.1,0.29],[0.06,0.055,0.06]);
+  tube('basal',[[s*0.15,0.32,0.4],[s*0.18,0.38,0.2],[s*0.17,0.37,-0.05],[s*0.2,0.28,-0.3],[s*0.3,0.12,-0.36]],0.045);
+  ell('basal',[s*0.27,0.12,0.1],[0.07,0.13,0.2]);ell('basal',[s*0.2,0.1,0.07],[0.04,0.09,0.12]);
+  tube('ventricles',[[s*0.07,0.3,0.4],[s*0.11,0.36,0.15],[s*0.11,0.36,-0.2],[s*0.15,0.25,-0.45],[s*0.28,0.06,-0.36],[s*0.3,-0.04,-0.08],[s*0.28,-0.06,0.12]],0.033);});
+tube('callosum',[[0,0.25,0.42],[0,0.36,0.56],[0,0.48,0.44],[0,0.53,0.1],[0,0.52,-0.2],[0,0.45,-0.45],[0,0.33,-0.52],[0,0.27,-0.45]],0.05,[3,1,1]);
+
+AG.position.y=0.1;
+const aBoxes={};
+AG.updateMatrixWorld(true);
+for(const o of atlas.pickables){const id=o.userData.id;const b=new THREE.Box3().setFromObject(o);if(!aBoxes[id])aBoxes[id]=b;else aBoxes[id].union(b);}
+function aCenter(id){return aBoxes[id].getCenter(new THREE.Vector3());}
+
+const aState={opacity:1,left:true,right:true,isolate:false,rotate:false};
+function applyAtlasOpacity(){
+  for(const o of atlas.pickables){
+    const m=o.material,id=o.userData.id;let op=o.userData.cortex?aState.opacity:1;
+    if(aState.isolate&&atlas.selected)op=id===atlas.selected?1:(o.userData.cortex?Math.min(op,0.06):0.1);
+    m.opacity=op;m.depthWrite=op>0.95;
+    o.visible=!(o.userData.cortex&&((o.userData.side===-1&&!aState.left)||(o.userData.side===1&&!aState.right)));
+    o.renderOrder=o.userData.cortex?2:1;
+  }
+}
+// labels (only on right side for readability)
+const ALPOS={frontal:[0.8,0.62,0.7],parietal:[0.78,0.86,-0.35],temporal:[1.02,-0.02,0.2],occipital:[0.62,0.35,-1.12],cerebellum:[0.5,-0.33,-0.95],
+  pons:[0,-0.23,0.08],medulla:[0,-0.48,-0.05],spinal:[0,-0.95,-0.16],midbrain:[0,0.03,-0.02],thalamus:[0.1,0.31,-0.08],hypothalamus:[0,0.06,0.22],pituitary:[0,-0.16,0.27],
+  pineal:[0,0.25,-0.32],visual:[0.15,-0.04,0.55],hippocampus:[0.33,0.06,-0.05],amygdala:[0.3,0.0,0.35],basal:[0.27,0.28,0.12],callosum:[0,0.66,0.1],ventricles:[0.12,0.47,-0.18]};
+for(const id in ALPOS){
+  const p=ALPOS[id];const inner=!['frontal','parietal','temporal','occipital','cerebellum'].includes(id);
+  addLabel(atlas,AINFO[id].name.replace(' & visual pathway',''),V3(p[0],p[1]+0.1,p[2]),AINFO[id].color,()=>{
+    if(aState.isolate&&atlas.selected)return id===atlas.selected;
+    if(inner){const sel=atlas.selected,selInner=sel&&!['frontal','parietal','temporal','occipital','cerebellum'].includes(sel);return (aState.opacity<0.6||!aState.right)&&(!selInner||sel===id);}
+    return aState.right&&aState.opacity>0.25||id==='cerebellum';
+  });
+}
+atlas.labels.forEach(l=>{const t=l.el.textContent;if(t.length>18&&t.indexOf('(')<0){}});
+
+function atlasSelect(id,focus){
+  atlas.selected=id;
+  document.querySelectorAll('#atlasList .item').forEach(e=>e.classList.toggle('on',e.dataset.id===id));
+  if(!id){showInfo(atlasIntro);applyAtlasOpacity();return;}
+  const inner=!AINFO[id]||!['frontal','parietal','temporal','occipital','cerebellum'].includes(id);
+  if(inner&&aState.opacity>0.5&&!aState.isolate){setOpacity(0.15);}
+  applyAtlasOpacity();showInfo(AINFO[id]);gcTrack('atlas-'+id,'Atlas: '+AINFO[id].name,true);
+  if(focus){const c=aCenter(id);const dir=atlas.camera.position.clone().sub(atlas.controls.target).normalize();
+    const dist=inner?2.6:3.6;tweenTo(atlas,c.clone().addScaledVector(dir,dist),c);}
+}
+atlas.onPick=id=>atlasSelect(id,false);
+const atlasIntro={name:'3D Brain Atlas',group:'Start here',color:'#5eead4',lead:'Spin the brain, click any structure, and read what it does and what happens when it is damaged.',
+ extra:`<h4>Try this</h4><ul><li>Drag the <b>cortex opacity</b> slider down to see the deep structures.</li><li>Pick <b>Optic chiasm &amp; visual pathway</b> and follow it from the eyes to the back of the brain.</li><li>Use <b>Medial view</b> to hide the left hemisphere and look at the middle of the brain.</li><li>Turn on <b>Isolate selection</b> to fade everything except what you clicked.</li></ul><p class="muted" style="margin-top:14px;font-size:12px">The model is a simplified teaching model, not a scan, so shapes and positions are approximate.</p>`};
+
+// sidebar
+(function(){
+  const S=atlas.side;
+  S.innerHTML=`<div class="sec"><h3>Find a structure</h3><input type="search" id="aSearch" placeholder="Search e.g. thalamus"><div class="list" id="atlasList"></div></div>
+  <div class="sec"><h3>View</h3><div class="btns">
+   <button class="btn" data-v="lat">Lateral</button><button class="btn" data-v="med">Medial</button><button class="btn" data-v="sup">Top</button>
+   <button class="btn" data-v="ant">Front</button><button class="btn" data-v="post">Back</button><button class="btn" data-v="inf">Bottom</button></div></div>
+  <div class="sec"><h3>Display</h3>
+   <div class="range"><label style="width:110px">Cortex opacity</label><input type="range" id="aOp" min="0" max="1" step="0.01" value="1"><span id="aOpV">100%</span></div>
+   <label class="tog">Labels<input type="checkbox" id="aLab" checked></label>
+   <label class="tog">Left hemisphere<input type="checkbox" id="aL" checked></label>
+   <label class="tog">Right hemisphere<input type="checkbox" id="aR" checked></label>
+   <label class="tog">Isolate selection<input type="checkbox" id="aIso"></label>
+   <label class="tog">Auto-rotate<input type="checkbox" id="aRot"></label>
+  </div>
+  <div class="sec"><button class="btn full" id="aReset">↺ Reset view</button></div>`;
+  const list=S.querySelector('#atlasList');
+  function renderList(q){
+    list.innerHTML='';q=(q||'').toLowerCase();
+    for(const [g,ids] of GROUPS){
+      const f=ids.filter(id=>(AINFO[id].name+' '+AINFO[id].group).toLowerCase().includes(q));if(!f.length)continue;
+      list.appendChild(el('div','grp',g));
+      for(const id of f){const it=el('div','item'+(atlas.selected===id?' on':''),`<span class="dot" style="background:${AINFO[id].color}"></span>${AINFO[id].name}`);it.dataset.id=id;it.onclick=()=>atlasSelect(id,true);list.appendChild(it);}
+    }
+    if(!list.children.length)list.innerHTML='<div class="muted">No structures found.</div>';
+  }
+  renderList();S.querySelector('#aSearch').oninput=e=>renderList(e.target.value);
+  const T=atlas.controls.target;
+  const views={lat:[3.9,0.4,0.6],med:[-3.9,0.3,0.3],sup:[0.01,4.2,0.2],ant:[0,0.3,4.2],post:[0,0.5,-4.2],inf:[0.01,-4.2,0.3]};
+  S.querySelectorAll('[data-v]').forEach(b=>b.onclick=()=>{
+    const v=b.dataset.v;if(v==='med'){setHemi(false,true);}else if(!aState.left||!aState.right){setHemi(true,true);}
+    tweenTo(atlas,V3(...views[v]),V3(0,0.15,0));
+  });
+  window.setOpacity=function(v){aState.opacity=v;S.querySelector('#aOp').value=v;S.querySelector('#aOpV').textContent=Math.round(v*100)+'%';applyAtlasOpacity();};
+  window.setHemi=function(l,r){aState.left=l;aState.right=r;S.querySelector('#aL').checked=l;S.querySelector('#aR').checked=r;applyAtlasOpacity();};
+  S.querySelector('#aOp').oninput=e=>setOpacity(+e.target.value);
+  S.querySelector('#aLab').onchange=e=>{atlas.showLabels=e.target.checked;};
+  S.querySelector('#aL').onchange=e=>setHemi(e.target.checked,aState.right);
+  S.querySelector('#aR').onchange=e=>setHemi(aState.left,e.target.checked);
+  S.querySelector('#aIso').onchange=e=>{aState.isolate=e.target.checked;applyAtlasOpacity();};
+  S.querySelector('#aRot').onchange=e=>{atlas.controls.autoRotate=e.target.checked;atlas.controls.autoRotateSpeed=1.2;};
+  S.querySelector('#aReset').onclick=()=>{setHemi(true,true);setOpacity(1);atlasSelect(null);tweenTo(atlas,V3(3.6,1.3,2.6),V3(0,0.15,0));};
+})();
+const setOpacity=v=>window.setOpacity(v), setHemi=(l,r)=>window.setHemi(l,r);
+atlas.intro=()=>showInfo(atlas.selected?AINFO[atlas.selected]:atlasIntro);
+applyAtlasOpacity();
+
+/* ======================================================================
+   2. NEURON TYPES
+   ====================================================================== */
+const neu=Module('neurons',V3(0,0.6,9.5),V3(0,0,0));
+const NCOL={dendrite:0x7cc6fe,soma:0xffb86b,nucleus:0xa86bff,hillock:0xff7b9c,axon:0xffd479,myelin:0xf3efe2,node:0xff4d6d,terminal:0x5eead4,periph:0x9be37a};
+const NPART={
+ dendrite:{name:'Dendrites',group:'Input',lead:'Branching extensions that receive signals from other neurons.',
+  does:['Covered in synapses; many have tiny dendritic spines where excitatory synapses land','Produce graded potentials (EPSPs and IPSPs) rather than all-or-none spikes','Their shape decides how inputs add together (spatial and temporal summation)'],
+  fact:'A single cortical pyramidal neuron can receive on the order of 10,000 synaptic inputs.'},
+ soma:{name:'Cell body (soma)',group:'Integration',lead:'The neuron\'s metabolic center. It holds the nucleus and makes most of the cell\'s proteins.',
+  does:['Contains the nucleus, rough ER (Nissl bodies) and Golgi apparatus','Sums up the graded potentials arriving from the dendrites'],
+  fact:'Nissl staining, which colors rough ER, is how neuroanatomists first mapped where cell bodies cluster.'},
+ nucleus:{name:'Nucleus',group:'Control center',lead:'Holds the neuron\'s DNA and controls which genes are expressed.',does:['Transcribes genes for channels, receptors and neurotransmitter enzymes','Long-term memory needs new gene expression here'],
+  fact:'Most neurons never divide again after development, so the same nucleus can last your whole life.'},
+ hillock:{name:'Axon hillock / initial segment',group:'Trigger zone',lead:'The cone where the axon leaves the soma. This is where the decision to fire is made.',
+  does:['The axon initial segment just past it has the highest density of voltage-gated Na⁺ channels','If summed input depolarizes it to threshold (about −55 mV), an action potential starts here'],
+  fact:'Because the threshold is lowest here, inputs on distant dendrites matter less unless they are boosted on the way.'},
+ axon:{name:'Axon',group:'Output cable',lead:'A single long process that carries action potentials away from the soma.',
+  does:['Conducts all-or-none action potentials without losing strength','Can branch into collaterals to reach several targets','Transports cargo along microtubules in both directions (axonal transport)'],
+  fact:'Motor neurons that run from the lower spinal cord to the foot can have axons around 1 meter long.'},
+ myelin:{name:'Myelin sheath',group:'Insulation',lead:'Fatty layers wrapped around the axon by glial cells.',
+  does:['Made by Schwann cells in the PNS and oligodendrocytes in the CNS','Raises membrane resistance and lowers capacitance so current spreads farther','Allows saltatory conduction: up to ~120 m/s vs ~0.5–2 m/s for thin unmyelinated fibers'],
+  wrong:['Multiple sclerosis: immune attack on CNS myelin','Guillain-Barré syndrome: attack on peripheral myelin'],
+  fact:'Head to the Action Potential tab and flip on "Myelinated" to watch the signal jump.'},
+ node:{name:'Node of Ranvier',group:'Relay point',lead:'Short gaps between myelin segments where the axon membrane is exposed.',
+  does:['Packed with voltage-gated Na⁺ channels','The action potential is regenerated at each node, so it seems to jump from node to node'],
+  fact:'Named after French anatomist Louis-Antoine Ranvier, who described them in 1878.'},
+ terminal:{name:'Axon terminals',group:'Output',lead:'The branched endings of the axon, each with a swollen bouton that forms a synapse.',
+  does:['Store neurotransmitter in synaptic vesicles','Ca²⁺ entry triggers release into the synaptic cleft'],
+  fact:'A zoomed-in 3D synapse is coming soon to Synaptica.'},
+ periph:{name:'Peripheral sensory endings',group:'Input',lead:'The receptor end of a sensory neuron, out in the skin, muscle or organs.',
+  does:['Free nerve endings detect pain (nociceptors), temperature and itch','Specialized endings detect touch, vibration and stretch','Turn a stimulus into a receptor potential that can trigger action potentials'],
+  fact:'Nociceptors include thin myelinated Aδ fibers (sharp, fast pain) and unmyelinated C fibers (slow, burning pain).'}
+};
+for(const k in NPART)NPART[k].color=hex(NCOL[k]);
+neu.info=NPART;
+const NTYPES={
+ multipolar:{label:'Multipolar',sub:'Motor neuron',name:'Multipolar neuron',group:'Most common type',lead:'One axon and many dendrites. This example is a spinal motor neuron that drives a skeletal muscle.',
+  does:['Most neurons in the CNS are multipolar','Motor neurons sit in the ventral horn of the spinal cord and release acetylcholine at the neuromuscular junction'],
+  fact:'ALS (amyotrophic lateral sclerosis) is a disease in which motor neurons degenerate.'},
+ pyramidal:{label:'Pyramidal',sub:'Cortex & hippocampus',name:'Pyramidal neuron',group:'Multipolar · excitatory',lead:'Triangle-shaped soma, one long apical dendrite reaching toward the brain surface, and a skirt of basal dendrites.',
+  does:['The main excitatory (glutamatergic) neuron of the cerebral cortex and hippocampus','Projects to other cortical areas, the thalamus, brainstem and spinal cord'],
+  fact:'Betz cells, giant pyramidal neurons in primary motor cortex, are among the largest neurons in the CNS.'},
+ purkinje:{label:'Purkinje',sub:'Cerebellum',name:'Purkinje cell',group:'Multipolar · inhibitory',lead:'A huge, flat, fan-shaped dendritic tree (like a pressed leaf). Rotate it to see how thin it is from the side.',
+  does:['The only output neuron of the cerebellar cortex','Releases GABA, so its output is inhibitory','Each one receives input from up to ~200,000 parallel fibers'],
+  fact:'Discovered by Jan Evangelista Purkyně in 1837, one of the first neurons ever described.'},
+ bipolar:{label:'Bipolar',sub:'Retina',name:'Bipolar neuron',group:'Two processes',lead:'One dendrite and one axon on opposite sides of the cell body.',
+  does:['Retinal bipolar cells pass signals from photoreceptors to ganglion cells','Also found in the olfactory epithelium and inner ear'],
+  fact:'Many retinal bipolar cells don\'t fire action potentials at all; they signal with graded potentials.'},
+ pseudo:{label:'Pseudounipolar',sub:'Sensory (DRG)',name:'Pseudounipolar neuron',group:'Sensory',lead:'A single stem splits in a T: one branch goes out to the body, the other goes into the spinal cord.',
+  does:['The cell bodies sit in dorsal root ganglia (DRG) next to the spinal cord','Carries touch, proprioception, temperature and pain into the CNS','Signals can skip the soma entirely and go straight from periphery to spinal cord'],
+  fact:'DRG neurons are central to pain research: nociceptor sensitization is a major driver of chronic pain.'}
+};
+let NG=null,nType='multipolar',nSeq=null,nFire=null;
+const pulseMat=new THREE.MeshBasicMaterial({color:0xfff6b0,transparent:true,opacity:0.95,blending:THREE.AdditiveBlending,depthWrite:false});
+const pulses=[];for(let i=0;i<14;i++){const p=new THREE.Mesh(new THREE.SphereGeometry(0.11,16,12),pulseMat);p.visible=false;neu.scene.add(p);pulses.push(p);}
+const haloMat=new THREE.MeshBasicMaterial({color:0xffd56a,transparent:true,opacity:0.25,blending:THREE.AdditiveBlending,depthWrite:false});
+pulses.forEach(p=>p.add(new THREE.Mesh(new THREE.SphereGeometry(0.16,16,12),haloMat)));
+
+function buildNeuron(type){
+  if(NG){neu.scene.remove(NG);NG.traverse(o=>{if(o.geometry)o.geometry.dispose();});}
+  neu.pickables=[];clearLabels(neu);neu.selected=null;nFire=null;
+  const R=rng(type.length*977+13);
+  const G=new THREE.Group();NG=G;neu.scene.add(G);
+  const mats={};
+  const M=id=>mats[id]||(mats[id]=new THREE.MeshStandardMaterial({color:NCOL[id],roughness:0.5,metalness:0.04,transparent:true,opacity:id==='soma'?0.55:1,depthWrite:id!=='soma'}));
+  const add=(geo,id)=>addPick(neu,G,new THREE.Mesh(geo,M(id)),id);
+  const paths={dend:[],term:[]};
+  const tubeAlong=(pts,r,id,seg)=>{const c=new THREE.CatmullRomCurve3(pts);add(new THREE.TubeGeometry(c,seg||Math.max(10,pts.length*4),r,8,false),id);return c;};
+  function dend(start,dir,len,r,depth,o,chain,id){
+    const pts=[start.clone()];let p=start.clone();const d=dir.clone();
+    for(let i=0;i<4;i++){d.x+=(R()-0.5)*o.wig;d.y+=(R()-0.5)*o.wig;d.z+=(R()-0.5)*o.wig*(o.flat?0.08:1);d.normalize();p=p.clone().addScaledVector(d,len/4);pts.push(p);}
+    tubeAlong(pts,r,id||'dendrite');
+    const ch=chain.length?chain.concat(pts.slice(1)):pts.slice();
+    if(depth>0){for(let j=0;j<o.k;j++){
+      const nd=d.clone();const ang=(j-(o.k-1)/2)*o.spread+(R()-0.5)*0.3;
+      const axis=o.flat?V3(0,0,1):V3(R()-0.5,R()-0.5,R()-0.5).cross(d).normalize();
+      nd.applyAxisAngle(axis,ang);dend(p,nd,len*o.decay,Math.max(r*0.7,0.014),depth-1,o,ch,id);}}
+    else paths.dend.push(new THREE.CatmullRomCurve3(ch.slice().reverse()));
+  }
+  function soma(center,scale,lathe){
+    let g;
+    if(lathe){g=new THREE.LatheGeometry(lathe.map(p=>new THREE.Vector2(p[0],p[1])),40);}
+    else{g=new THREE.SphereGeometry(1,40,28);g.scale(scale[0],scale[1],scale[2]);}
+    const m=add(g,'soma');m.position.copy(center);
+    const nu=add(new THREE.SphereGeometry(0.14,24,18),'nucleus');nu.position.copy(center);
+    return m;
+  }
+  function hillock(at,dir,len,r){const g=new THREE.ConeGeometry(r,len,20,1,true);const m=add(g,'hillock');m.quaternion.setFromUnitVectors(V3(0,1,0),dir.clone().normalize());m.position.copy(at).addScaledVector(dir.clone().normalize(),len/2);return m;}
+  function axon(pts,myel,r){
+    const curve=new THREE.CatmullRomCurve3(pts.map(p=>p.isVector3?p:V3(...p)));
+    add(new THREE.TubeGeometry(curve,160,r,10,false),'axon');
+    let nodes=0;
+    if(myel){const L=curve.getLength(),seg=0.7,gap=0.16;
+      for(let s=0.25;s+seg<L-0.15;s+=seg+gap){
+        const u=(s+seg/2)/L,cp=curve.getPointAt(u),tn=curve.getTangentAt(u);
+        const my=add(new THREE.CapsuleGeometry(r*2.3,seg-r*4.6,6,14),'myelin');my.position.copy(cp);my.quaternion.setFromUnitVectors(V3(0,1,0),tn);
+        const un=Math.min(0.999,(s+seg+gap/2)/L);if(s+seg+gap+seg<L-0.15){const np=curve.getPointAt(un),nt=curve.getTangentAt(un);
+          const nd=add(new THREE.CylinderGeometry(r*1.45,r*1.45,gap*0.6,14),'node');nd.position.copy(np);nd.quaternion.setFromUnitVectors(V3(0,1,0),nt);nodes++;}
+      }}
+    curve.userData={myel,nodes:Math.max(1,nodes)};
+    return curve;
+  }
+  function terminals(start,dir,n,len,spread,flat){
+    for(let j=0;j<n;j++){
+      const d=dir.clone().normalize();const axis=flat?V3(0,0,1):V3(R()-0.5,R()-0.5,R()-0.5).cross(d).normalize();
+      d.applyAxisAngle(axis,(j-(n-1)/2)*spread+(R()-0.5)*0.25);
+      const mid=start.clone().addScaledVector(dir.clone().normalize(),len*0.35).addScaledVector(d,len*0.2);
+      const end=start.clone().addScaledVector(d,len);
+      const c=tubeAlong([start.clone(),mid,end],0.032,'terminal',12);paths.term.push(c);
+      const b=add(new THREE.SphereGeometry(0.09,16,12),'terminal');b.position.copy(end);
+    }
+  }
+  const seq=[];let lab={};
+  if(type==='multipolar'){
+    soma(V3(0,0,0),[0.4,0.36,0.36]);
+    for(let i=0;i<7;i++){let d;do{d=V3(R()-0.5,R()-0.5,R()-0.5).normalize();}while(d.x>0.25);dend(d.clone().multiplyScalar(0.3),d,1.15,0.075,3,{k:2,spread:0.75,decay:0.72,wig:0.55},[],'dendrite');}
+    hillock(V3(0.3,0,0),V3(1,0,0),0.35,0.15);
+    const ax=axon([[0.62,0,0],[2,0.15,0.05],[3.4,-0.12,0],[4.8,0.1,-0.05],[6.1,0,0]],true,0.055);
+    terminals(V3(6.1,0,0),V3(1,0,0),5,0.85,0.45);
+    G.position.x=-2.2;
+    seq.push({curves:paths.dend.filter((_,i)=>i%3===0).slice(0,9),dur:0.9},{flash:'soma',dur:0.35},{curves:[ax],dur:1.1,salt:true},{curves:paths.term,dur:0.45},{flash:'terminal',dur:0.4});
+    neu.camT=V3(0.2,0,0);neu.camP=V3(0.2,0.8,9.5);
+  }else if(type==='pyramidal'){
+    soma(V3(0,0,0),null,[[0.001,-0.3],[0.25,-0.27],[0.37,-0.12],[0.33,0.1],[0.2,0.33],[0.08,0.55],[0.001,0.6]]);
+    const trunk=[V3(0,0.55,0),V3(0.05,1.4,0.02),V3(-0.05,2.3,-0.03),V3(0,3.1,0)];tubeAlong(trunk,0.07,'dendrite',30);
+    const tc=new THREE.CatmullRomCurve3(trunk);
+    [0.3,0.5,0.7].forEach((u,i)=>{const p=tc.getPointAt(u);const ch=[];for(let q=0;q<=6;q++)ch.push(tc.getPointAt(u*q/6));
+      for(const sgn of [1,-1]){dend(p,V3(sgn,0.6,(R()-0.5)*0.8).normalize(),0.7,0.04,1,{k:2,spread:0.6,decay:0.7,wig:0.4},ch,'dendrite');}});
+    const tch=[];for(let q=0;q<=8;q++)tch.push(tc.getPointAt(q/8));
+    for(let i=0;i<4;i++)dend(V3(0,3.1,0),V3((i-1.5)*0.6,1,(R()-0.5)*0.6).normalize(),0.75,0.045,2,{k:2,spread:0.6,decay:0.7,wig:0.45},tch,'dendrite');
+    for(let i=0;i<6;i++){const a=i/6*Math.PI*2;dend(V3(Math.cos(a)*0.25,-0.18,Math.sin(a)*0.25),V3(Math.cos(a),-0.45,Math.sin(a)).normalize(),0.9,0.055,2,{k:2,spread:0.7,decay:0.7,wig:0.5},[],'dendrite');}
+    hillock(V3(0,-0.25,0),V3(0,-1,0),0.32,0.13);
+    const ax=axon([[0,-0.55,0],[0.05,-1.5,0],[-0.06,-2.5,0.02],[0,-3.5,0]],true,0.05);
+    tubeAlong([V3(0,-1.25,0),V3(0.5,-1.5,0.1),V3(1.0,-1.85,0.15)],0.03,'axon');
+    terminals(V3(0,-3.5,0),V3(0,-1,0),4,0.8,0.5);
+    seq.push({curves:paths.dend.filter((_,i)=>i%3===0).slice(0,10),dur:1.0},{flash:'soma',dur:0.35},{curves:[ax],dur:1.0,salt:true},{curves:paths.term,dur:0.45},{flash:'terminal',dur:0.4});
+    neu.camT=V3(0,0.1,0);neu.camP=V3(0.3,0.4,10);
+  }else if(type==='purkinje'){
+    soma(V3(0,0,0),[0.34,0.4,0.34]);
+    for(const s of [1,-1])dend(V3(s*0.1,0.36,0),V3(s*0.45,1,0).normalize(),0.95,0.09,5,{k:2,spread:0.55,decay:0.8,wig:0.4,flat:true},[],'dendrite');
+    hillock(V3(0,-0.32,0),V3(0,-1,0),0.3,0.12);
+    const ax=axon([[0,-0.6,0],[0.08,-1.6,0],[-0.05,-2.6,0],[0,-3.4,0]],true,0.05);
+    terminals(V3(0,-3.4,0),V3(0,-1,0),4,0.7,0.5);
+    seq.push({curves:paths.dend.filter((_,i)=>i%5===0).slice(0,12),dur:1.1},{flash:'soma',dur:0.35},{curves:[ax],dur:1.0,salt:true},{curves:paths.term,dur:0.4},{flash:'terminal',dur:0.4});
+    neu.camT=V3(0,0.4,0);neu.camP=V3(0.8,0.6,10.5);
+  }else if(type==='bipolar'){
+    soma(V3(0,0,0),[0.26,0.4,0.26]);
+    tubeAlong([V3(0,0.38,0),V3(0.04,1.0,0),V3(0,1.5,0)],0.06,'dendrite');
+    const ch=[V3(0,0.38,0),V3(0.04,1.0,0),V3(0,1.5,0)];
+    for(let i=0;i<3;i++)dend(V3(0,1.5,0),V3((i-1)*0.7,1,(R()-0.5)*0.5).normalize(),0.6,0.04,1,{k:2,spread:0.6,decay:0.7,wig:0.4},ch,'dendrite');
+    hillock(V3(0,-0.35,0),V3(0,-1,0),0.25,0.1);
+    const ax=axon([[0,-0.58,0],[0.05,-1.4,0],[-0.04,-2.2,0],[0,-2.8,0]],false,0.045);
+    terminals(V3(0,-2.8,0),V3(0,-1,0),3,0.6,0.6);
+    seq.push({curves:paths.dend,dur:0.8},{flash:'soma',dur:0.35},{curves:[ax],dur:0.9},{curves:paths.term,dur:0.4},{flash:'terminal',dur:0.4});
+    neu.camT=V3(0,-0.3,0);neu.camP=V3(0.3,0.2,8.5);
+  }else{ // pseudo
+    soma(V3(0,1.25,0),[0.42,0.42,0.42]);
+    hillock(V3(0,0.87,0),V3(0,-1,0),0.22,0.12);
+    const stem=new THREE.CatmullRomCurve3([V3(0,0.66,0),V3(0.05,0.3,0),V3(0,0,0)]);add(new THREE.TubeGeometry(stem,20,0.05,10,false),'axon');
+    const per=axon([[0,0,0],[-1.5,-0.1,0],[-3,0.08,0],[-4.6,0,0]],true,0.05);
+    const cen=axon([[0,0,0],[1.4,0.08,0],[2.8,-0.06,0],[3.8,0,0]],true,0.05);
+    for(let i=0;i<5;i++){const d=V3(-1,(i-2)*0.45,(R()-0.5)*0.8).normalize();dend(V3(-4.6,0,0),d,0.75,0.03,1,{k:2,spread:0.6,decay:0.7,wig:0.6},[],'periph');}
+    terminals(V3(3.8,0,0),V3(1,0,0),4,0.7,0.5);
+    const perRev=new THREE.CatmullRomCurve3(per.getPoints(40).reverse());perRev.userData=per.userData;
+    seq.push({curves:paths.dend,dur:0.7},{curves:[perRev],dur:1.0,salt:true},{curves:[cen],dur:0.8,salt:true},{curves:paths.term,dur:0.4},{flash:'terminal',dur:0.4});
+    G.position.x=0.4;
+    neu.camT=V3(0,0.3,0);neu.camP=V3(0,1.2,10);
+  }
+  nSeq=seq;
+  // labels at first/last mesh of each part
+  G.updateMatrixWorld(true);
+  const seen={};
+  neu.pickables.forEach(o=>{const id=o.userData.id;if(id==='terminal'||!seen[id])seen[id]=o;});
+  for(const id in seen){const c=new THREE.Box3().setFromObject(seen[id]).getCenter(new THREE.Vector3());const off=id==='nucleus'?V3(0,-0.05,0):V3(0,0.18,0);
+    addLabel(neu,NPART[id].name.replace(' / initial segment','').replace(' (soma)',''),c.add(off),NPART[id].color);}
+  tweenTo(neu,neu.camP,neu.camT,0.6);
+  showInfo(NTYPES[type]);
+}
+function fireNeuron(){nFire={i:0,t:0};}
+function updNeuron(dt){
+  pulses.forEach(p=>p.visible=false);
+  for(const o of neu.pickables){if(o.userData.baseEm)o.userData.baseEm=Math.max(0,o.userData.baseEm-0);}
+  neu.pickables.forEach(o=>{if(o.userData.flashT>0){o.userData.flashT-=dt;o.userData.baseEm=o.userData.flashT>0?0x7a4a00:0;}});
+  if(!nFire||!nSeq)return;
+  const st=nSeq[nFire.i];if(!st){nFire=null;return;}
+  nFire.t+=dt;const u=clamp(nFire.t/st.dur,0,1);
+  if(st.flash){if(nFire.t-dt<=0)neu.pickables.forEach(o=>{if(o.userData.id===st.flash)o.userData.flashT=0.45;});}
+  else{
+    st.curves.forEach((c,k)=>{const p=pulses[k%pulses.length];let uu=u;
+      if(st.salt&&c.userData&&c.userData.myel){const n=c.userData.nodes+1;const kk=u*n;uu=(Math.floor(kk)+Math.min(1,(kk%1)*3))/n;uu=Math.min(uu,1);}
+      p.visible=true;p.position.copy(c.getPointAt(clamp(uu,0,1))).add(NG.position);});
+  }
+  if(nFire.t>=st.dur){nFire.i++;nFire.t=0;}
+}
+neu.update=updNeuron;
+neu.onPick=id=>{neu.selected=id;showInfo(id?NPART[id]:NTYPES[nType]);};
+neu.intro=()=>showInfo(neu.selected?NPART[neu.selected]:NTYPES[nType]);
+(function(){
+  const S=neu.side;
+  S.innerHTML=`<div class="sec"><h3>Choose a neuron</h3><div id="nTypes"></div></div>
+  <div class="sec"><button class="btn big" id="nFire" style="width:100%">⚡ Fire a signal</button><p class="muted" style="font-size:12px;margin:8px 0 0">Watch input travel through dendrites → soma → axon → terminals. On myelinated axons the pulse jumps between nodes.</p></div>
+  <div class="sec"><h3>Parts (click in 3D or here)</h3><div class="list" id="nParts"></div></div>
+  <div class="sec"><label class="tog">Labels<input type="checkbox" id="nLab" checked></label><label class="tog">Auto-rotate<input type="checkbox" id="nRot"></label></div>`;
+  const tw=S.querySelector('#nTypes');
+  for(const k in NTYPES){const b=el('div','item'+(k===nType?' on':''),`<div><b>${NTYPES[k].label}</b><div class="muted" style="font-size:12px">${NTYPES[k].sub}</div></div>`);b.dataset.k=k;
+    b.onclick=()=>{gcTrack('neuron-'+k,'Neuron: '+NTYPES[k].name,true);nType=k;tw.querySelectorAll('.item').forEach(e=>e.classList.toggle('on',e.dataset.k===k));buildNeuron(k);renderParts();};tw.appendChild(b);}
+  function renderParts(){const pl=S.querySelector('#nParts');pl.innerHTML='';const ids=[...new Set(neu.pickables.map(o=>o.userData.id))];
+    ids.forEach(id=>{const it=el('div','item',`<span class="dot" style="background:${NPART[id].color}"></span>${NPART[id].name}`);it.onclick=()=>neu.onPick(id);pl.appendChild(it);});}
+  window._renderParts=renderParts;
+  S.querySelector('#nFire').onclick=fireNeuron;
+  S.querySelector('#nLab').onchange=e=>neu.showLabels=e.target.checked;
+  S.querySelector('#nRot').onchange=e=>{neu.controls.autoRotate=e.target.checked;neu.controls.autoRotateSpeed=1.5;};
+})();
+neu.built=false;
+
+/* ======================================================================
+   3. ACTION POTENTIAL
+   ====================================================================== */
+const ap=Module('action-potential',V3(0.5,1.7,7.4),V3(0,-0.75,0));
+const AXL=8,AXR=0.45,X0=-4,XE=-0.4,NODE_SP=1.2,NODE_DT=0.22,V_UN=2.4;
+const apS={t:0,stim:null,strength:25,myel:false,speed:1,paused:false,auto:false,trace:[],msg:''};
+const memG=new THREE.CylinderGeometry(AXR,AXR,AXL,56,260,true);memG.rotateZ(Math.PI/2);
+const mcol=new Float32Array(memG.attributes.position.count*3);memG.setAttribute('color',new THREE.BufferAttribute(mcol,3));
+const memM=new THREE.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:0.55,side:THREE.DoubleSide,depthWrite:false,roughness:0.35});
+const mem=addPick(ap,ap.scene,new THREE.Mesh(memG,memM),'membrane');mem.userData.pickAlways=true;
+const core=new THREE.Mesh(new THREE.CylinderGeometry(AXR*0.97,AXR*0.97,AXL,32,1,true).rotateZ(Math.PI/2),new THREE.MeshBasicMaterial({color:0x1a2a55,transparent:true,opacity:0.25,side:THREE.BackSide,depthWrite:false}));ap.scene.add(core);
+const nodesX=[];for(let x=X0;x<=X0+AXL+0.01;x+=NODE_SP)nodesX.push(+x.toFixed(3));
+const myelG=new THREE.Group();ap.scene.add(myelG);
+const myelMat=new THREE.MeshStandardMaterial({color:0xf3efe2,roughness:0.7,transparent:true,opacity:0.92});
+for(let k=0;k<nodesX.length-1;k++){const len=NODE_SP-0.28;
+  // capsule length too long for radius -> use cylinder with rounded look
+  const c=new THREE.Mesh(new THREE.CylinderGeometry(0.64,0.64,len,40,1,false),myelMat);c.rotation.z=Math.PI/2;c.position.x=nodesX[k]+NODE_SP/2;addPick(ap,myelG,c,'apmyelin');}
+myelG.visible=false;
+const chans=[];
+function mkChan(x,ang,type,group){
+  const mat=new THREE.MeshStandardMaterial({color:type==='na'?0xff5d5d:0x5b8cff,roughness:0.4});
+  const m=new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.075,0.24,12),mat);
+  m.position.set(x,Math.cos(ang)*AXR,Math.sin(ang)*AXR);m.rotation.x=ang;
+  addPick(ap,group,m,type==='na'?'nachan':'kchan');chans.push({m,x,type,group});return m;
+}
+const chU=new THREE.Group(),chM=new THREE.Group();ap.scene.add(chU,chM);chM.visible=false;
+for(let x=X0+0.2,i=0;x<X0+AXL;x+=0.36,i++){[0,Math.PI/2,Math.PI,Math.PI*1.5].forEach((a,j)=>mkChan(x,a+(i%2)*0.6,(i+j)%2?'k':'na',chU));}
+nodesX.forEach(x=>{for(let j=0;j<6;j++)mkChan(x,j/6*Math.PI*2,j%2?'k':'na',chM);});
+// ions
+function ionMesh(n,color){const im=new THREE.InstancedMesh(new THREE.SphereGeometry(0.045,10,8),new THREE.MeshStandardMaterial({color,emissive:color,emissiveIntensity:0.35,roughness:0.5}),n);ap.scene.add(im);return im;}
+const NNA=340,NK=220,naIM=ionMesh(NNA,0xffb020),kIM=ionMesh(NK,0xc08cff);
+const R2=rng(7);
+const naP=[],kP=[];
+for(let i=0;i<NNA;i++)naP.push({x:X0+R2()*AXL,a:R2()*Math.PI*2,r:0.72+R2()*0.6,mv:R2()<0.4,ph:R2()*6.28,rin:0.12+R2()*0.25});
+for(let i=0;i<NK;i++)kP.push({x:X0+R2()*AXL,a:R2()*Math.PI*2,r:0.06+R2()*0.32,mv:R2()<0.45,ph:R2()*6.28,rout:0.75+R2()*0.45});
+// electrodes
+const recE=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.05,1.6,10),new THREE.MeshStandardMaterial({color:0xd8dde8,metalness:0.6,roughness:0.3}));recE.position.set(XE,AXR+0.75,0);ap.scene.add(recE);
+const stimE=new THREE.Mesh(new THREE.CylinderGeometry(0.02,0.05,1.6,10),new THREE.MeshStandardMaterial({color:0xffd166,metalness:0.4,roughness:0.3,emissive:0}));stimE.position.set(X0+0.15,AXR+0.75,0.0);stimE.rotation.z=0.0;ap.scene.add(stimE);
+addLabel(ap,'Recording electrode',V3(XE,1.75,0),'#d8dde8');addLabel(ap,'Stimulating electrode',V3(X0+0.15,1.75,0),'#ffd166');
+addLabel(ap,'Na⁺ (outside)',V3(2.6,-1.25,0.6),'#ffb020');addLabel(ap,'K⁺ (inside)',V3(2.9,0.05,0.3),'#c08cff');
+addLabel(ap,'Myelin',V3(1.4,0.78,0),'#f3efe2',()=>apS.myel);addLabel(ap,'Node of Ranvier',V3(nodesX[5],-0.85,0),'#ff4d6d',()=>apS.myel);
+
+function apV(t){
+  if(t<0)return -70;
+  if(t<0.3)return -70+15*ease(t/0.3);
+  if(t<0.7)return -55+90*ease((t-0.3)/0.4);
+  if(t<1.6)return 35-115*ease((t-0.7)/0.9);
+  if(t<4.2)return -80+10*ease((t-1.6)/2.6);
+  return -70;
+}
+function delay(x){if(!apS.myel)return (x-X0)/V_UN;const k=Math.floor((x-X0)/NODE_SP+1e-6);const f=((x-X0)/NODE_SP)-k;return k*NODE_DT+f*0.03;}
+function supra(){return -70+apS.strength>=-55;}
+function Vat(x,t){
+  if(apS.stim===null)return -70;const dt=t-apS.stim;
+  if(supra())return apV(dt-delay(x));
+  if(dt<0)return -70;const a=(dt/0.5)*Math.exp(1-dt/0.5);return -70+apS.strength*a*Math.exp(-(x-X0)/0.7);
+}
+function tauAt(x,t){if(apS.stim===null||!supra())return -1;return t-apS.stim-delay(x);}
+const cA=new THREE.Color(),cTmp=new THREE.Color();
+const vStops=[[-85,0x1f3b99],[-70,0x2f6fd6],[-55,0x8c5bd6],[-20,0xe0559a],[10,0xff7a3d],[35,0xffe066]];
+function vColor(v,out){let i=0;while(i<vStops.length-2&&v>vStops[i+1][0])i++;const [a,ca]=vStops[i],[b,cb]=vStops[i+1];out.setHex(ca);cTmp.setHex(cb);out.lerp(cTmp,clamp((v-a)/(b-a),0,1));return out;}
+const dummy=new THREE.Object3D();
+const memPos=memG.attributes.position;
+function apPhase(tau){
+  if(apS.stim!==null&&!supra()){return ['Subthreshold stimulus','The membrane depolarized a little, but never reached threshold (−55 mV), so no action potential fired. The bump fades with distance and time. This is the all-or-none principle.'];}
+  if(tau<0)return ['Resting potential (−70 mV)','Inside is negative compared to outside. The Na⁺/K⁺ pump keeps Na⁺ high outside and K⁺ high inside, and leak K⁺ channels set the resting voltage.'];
+  if(tau<0.3)return ['Depolarizing to threshold','Current spreading from upstream nudges the membrane up toward −55 mV. A few voltage-gated Na⁺ channels start to open.'];
+  if(tau<0.7)return ['Rising phase','Threshold reached: voltage-gated Na⁺ channels open fast, Na⁺ rushes in, and the inside swings positive (about +35 mV). Positive feedback!'];
+  if(tau<1.6)return ['Falling phase (repolarization)','Na⁺ channels inactivate (gray) and slower voltage-gated K⁺ channels open. K⁺ flows out and the voltage drops back down. The membrane is now in its absolute refractory period.'];
+  if(tau<4.2)return ['Undershoot (hyperpolarization)','K⁺ channels are slow to close, so the voltage overshoots below rest (about −80 mV). This relative refractory period helps make the signal travel one way.'];
+  return ['Back to rest','Channels reset to closed. The Na⁺/K⁺-ATPase restores the ion gradients over time (3 Na⁺ out for every 2 K⁺ in).'];
+}
+const apHud=el('div','hud');stage.appendChild(apHud);ap.hud=apHud;
+apHud.innerHTML=`<div class="card"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px"><span>Membrane potential at recording electrode</span><span id="apMv">−70 mV</span></div><canvas id="apTrace" width="340" height="120" style="width:340px;max-width:100%;height:120px"></canvas></div><div class="card phase"><h3 id="apPh"></h3><p id="apPt"></p></div>`;
+const trC=apHud.querySelector('#apTrace'),trX=trC.getContext('2d');
+function drawTrace(){
+  const W=trC.width,H=trC.height,y=v=>H-8-(v+90)/(135)*(H-16);
+  trX.clearRect(0,0,W,H);trX.font='10px Inter';trX.fillStyle='#97a4bf';
+  [[35,'+35'],[0,'0'],[-55,'threshold −55'],[-70,'rest −70']].forEach(([v,t])=>{trX.strokeStyle=v===-55?'rgba(255,107,129,.55)':'rgba(255,255,255,.1)';trX.setLineDash(v===-55?[4,4]:[]);trX.beginPath();trX.moveTo(0,y(v));trX.lineTo(W,y(v));trX.stroke();trX.fillText(t,4,y(v)-3);});
+  trX.setLineDash([]);
+  const win=8,tr=apS.trace;if(tr.length<2)return;const tEnd=apS.t;
+  trX.strokeStyle='#5eead4';trX.lineWidth=2;trX.beginPath();
+  tr.forEach((p,i)=>{const x=W-(tEnd-p[0])/win*W;i?trX.lineTo(x,y(p[1])):trX.moveTo(x,y(p[1]));});trX.stroke();trX.lineWidth=1;
+}
+function busy(){if(apS.stim===null)return false;const end=supra()?delay(X0+AXL)+4.4:3;return apS.t-apS.stim<end;}
+function stimulate(){if(busy()){return;}apS.stim=apS.t+0.05;}
+function updAP(dt){
+  if(!apS.paused)apS.t+=dt*apS.speed;
+  const t=apS.t;
+  // membrane colors
+  for(let i=0;i<memPos.count;i++){const x=memPos.getX(i);vColor(Vat(x,t),cA);mcol[i*3]=cA.r;mcol[i*3+1]=cA.g;mcol[i*3+2]=cA.b;}
+  memG.attributes.color.needsUpdate=true;
+  // channels
+  for(const c of chans){if(!c.group.visible)continue;const tau=tauAt(c.x,t);let col,em=0,s=1;
+    if(c.type==='na'){if(tau>=0.25&&tau<0.8){col=0xff3b3b;em=0x661010;s=1.35;}else if(tau>=0.8&&tau<2.3){col=0x6b6b6b;}else col=0xa83a3a;}
+    else{if(tau>=0.7&&tau<2.6){col=0x4f86ff;em=0x10205e;s=1.35;}else col=0x34508f;}
+    c.m.material.color.setHex(col);c.m.userData.baseEm=em;c.m.scale.set(s,1,s);}
+  // ions
+  const nodeNear=x=>{let m=9;for(const n of nodesX)m=Math.min(m,Math.abs(n-x));return m;};
+  for(let i=0;i<NNA;i++){const p=naP[i];let r=p.r;
+    if(p.mv&&(!apS.myel||nodeNear(p.x)<0.22)){const tau=tauAt(p.x,t);if(tau>0){const a=tau<0.8?ease((tau-0.3)/0.5):tau<2.6?1:1-ease((tau-2.6)/1.8);r=lerp(p.r,p.rin,a);}}
+    const w=Math.sin(t*3+p.ph)*0.03;dummy.position.set(p.x+w,Math.cos(p.a+w)*r,Math.sin(p.a+w)*r);
+    dummy.scale.setScalar(apS.myel&&r>0.55&&r<0.78&&nodeNear(p.x)>0.2?0.001:1);dummy.updateMatrix();naIM.setMatrixAt(i,dummy.matrix);}
+  naIM.instanceMatrix.needsUpdate=true;
+  for(let i=0;i<NK;i++){const p=kP[i];let r=p.r;
+    if(p.mv&&(!apS.myel||nodeNear(p.x)<0.22)){const tau=tauAt(p.x,t);if(tau>0){const a=tau<1.6?ease((tau-0.7)/0.9):tau<2.6?1:1-ease((tau-2.6)/1.8);r=lerp(p.r,p.rout,a);}}
+    const w=Math.sin(t*3+p.ph)*0.03;dummy.position.set(p.x+w,Math.cos(p.a)*r,Math.sin(p.a)*r);
+    dummy.scale.setScalar(apS.myel&&r>0.55&&nodeNear(p.x)>0.2?0.001:1);dummy.updateMatrix();kIM.setMatrixAt(i,dummy.matrix);}
+  kIM.instanceMatrix.needsUpdate=true;
+  // stim electrode flash
+  stimE.material.emissive.setHex(apS.stim!==null&&t-apS.stim>=0&&t-apS.stim<0.3?0x8a6a00:0);
+  // trace & HUD
+  const v=Vat(XE,t);apS.trace.push([t,v]);while(apS.trace.length&&apS.trace[0][0]<t-8.5)apS.trace.shift();
+  drawTrace();apHud.querySelector('#apMv').textContent=(v>=0?'+':'−')+Math.abs(Math.round(v))+' mV';
+  const [h,p]=apPhase(tauAt(XE,t));const ph=apHud.querySelector('#apPh');if(ph.textContent!==h){ph.textContent=h;apHud.querySelector('#apPt').textContent=p;}
+  const b=ap.side.querySelector('#apStim');if(b)b.disabled=busy();
+  if(apS.auto&&!busy()&&!apS.paused)stimulate();
+}
+ap.update=updAP;
+ap.info={
+ membrane:{name:'Axon membrane',group:'Excitable membrane',color:'#8c5bd6',lead:'The color shows voltage: blue is resting (−70 mV), purple is near threshold, and yellow is the peak of the action potential (+35 mV).',
+  does:['A lipid bilayer that keeps ions separated, creating a voltage','Studded with ion channels that open and close depending on voltage'],fact:'Hodgkin and Huxley worked this out in the squid giant axon, which is up to about 1 mm thick.'},
+ nachan:{name:'Voltage-gated Na⁺ channel',group:'Ion channel',color:'#ff5d5d',lead:'Opens fast when the membrane hits threshold, letting Na⁺ rush in.',
+  does:['Bright red = open, dark red = closed, gray = inactivated','The inactivation gate (the "ball and chain") shuts it about 1 ms after opening and keeps it shut until the membrane repolarizes','Inactivation is the reason for the absolute refractory period'],
+  wrong:['Local anesthetics like lidocaine block these channels, which is how they stop pain signals','Tetrodotoxin (pufferfish toxin) blocks them too'],fact:'Nav1.7 mutations can cause either an inability to feel pain or severe pain disorders, making it a big target in pain research.'},
+ kchan:{name:'Voltage-gated K⁺ channel',group:'Ion channel',color:'#5b8cff',lead:'Opens more slowly than Na⁺ channels and lets K⁺ flow out.',
+  does:['Bright blue = open','Repolarizes the membrane after the peak','Slow closing causes the after-hyperpolarization (undershoot)'],fact:'The "delayed rectifier" K⁺ current was one of the two main currents in the Hodgkin-Huxley model.'},
+ apmyelin:{...NPART.myelin}
+};
+ap.onPick=id=>{ap.selected=id;id?showInfo(ap.info[id]):ap.intro();};
+ap.intro=()=>showInfo(ap.selected?ap.info[ap.selected]:{name:'The action potential',group:'Neurophysiology',color:'#5eead4',lead:'A brief, all-or-none electrical signal that travels down the axon. Press Stimulate and watch the wave of color move along the membrane while ions cross it.',
+  extra:`<h4>Legend</h4><div class="legend"><span class="dot" style="background:#ffb020"></span>Na⁺ ions (mostly outside)<span class="dot" style="background:#c08cff"></span>K⁺ ions (mostly inside)<span class="dot" style="background:#ff5d5d"></span>Voltage-gated Na⁺ channel<span class="dot" style="background:#5b8cff"></span>Voltage-gated K⁺ channel</div>
+  <h4>Experiments to try</h4><ul><li>Lower the stimulus below 15 mV: no spike at all (all-or-none).</li><li>Turn on <b>Myelinated</b> and compare how fast the signal reaches the recording electrode.</li><li>Pause mid-spike and click a channel to see what state it is in.</li></ul>`,
+  fact:'Real myelinated axons conduct up to ~120 m/s, roughly 50–100× faster than thin unmyelinated ones. The speed difference is shrunk here so you can see it.'});
+(function(){
+  const S=ap.side;
+  S.innerHTML=`<div class="sec"><button class="btn big" id="apStim" style="width:100%">⚡ Stimulate</button></div>
+  <div class="sec"><h3>Stimulus strength</h3><div class="range"><input type="range" id="apStr" min="2" max="40" step="1" value="25"><span id="apStrV">25 mV</span></div><p class="muted" style="font-size:12px;margin:2px 0 0">Threshold needs a 15 mV bump (−70 → −55 mV).</p></div>
+  <div class="sec"><h3>Axon</h3><div class="btns"><button class="btn on" id="apUn">Unmyelinated</button><button class="btn" id="apMy">Myelinated</button></div></div>
+  <div class="sec"><h3>Playback</h3><div class="range"><label style="width:60px">Speed</label><input type="range" id="apSp" min="0.15" max="3" step="0.05" value="1"><span id="apSpV">1.0×</span></div>
+   <div class="btns" style="margin-top:6px"><button class="btn" id="apPause">⏸ Pause</button></div>
+   <label class="tog" style="margin-top:8px">Auto-repeat<input type="checkbox" id="apAuto"></label><label class="tog">Labels<input type="checkbox" id="apLab" checked></label></div>`;
+  S.querySelector('#apStim').onclick=stimulate;
+  S.querySelector('#apStr').oninput=e=>{apS.strength=+e.target.value;S.querySelector('#apStrV').textContent=apS.strength+' mV';};
+  const setM=m=>{if(busy())apS.stim=null;apS.myel=m;myelG.visible=m;chM.visible=m;chU.visible=!m;S.querySelector('#apUn').classList.toggle('on',!m);S.querySelector('#apMy').classList.toggle('on',m);};
+  S.querySelector('#apUn').onclick=()=>setM(false);S.querySelector('#apMy').onclick=()=>setM(true);
+  S.querySelector('#apSp').oninput=e=>{apS.speed=+e.target.value;S.querySelector('#apSpV').textContent=apS.speed.toFixed(1)+'×';};
+  const pb=S.querySelector('#apPause');pb.onclick=()=>{apS.paused=!apS.paused;pb.textContent=apS.paused?'▶ Play':'⏸ Pause';pb.classList.toggle('on',apS.paused);};
+  S.querySelector('#apAuto').onchange=e=>apS.auto=e.target.checked;
+  S.querySelector('#apLab').onchange=e=>ap.showLabels=e.target.checked;
+})();
+
+/* ======================================================================
+   4. SYNAPSE
+   ====================================================================== */
+const sy=Module('synapse',V3(3.0,0.9,5.6),V3(0,-0.45,0));
+const syS={T:0,playing:false,mode:'all',stopAt:null,inhib:false,speed:1};
+const STEPS=[
+ {s:0,e:2,t:'Action potential arrives',p:'An action potential travels down the axon and depolarizes the presynaptic terminal.'},
+ {s:2,e:4,t:'Voltage-gated Ca²⁺ channels open',p:'Depolarization opens Ca²⁺ channels at the active zone. Ca²⁺ is far more concentrated outside, so it floods in.'},
+ {s:4,e:6,t:'Vesicles fuse (exocytosis)',p:'Ca²⁺ binds synaptotagmin, and SNARE proteins zip the docked vesicle into the membrane. The vesicle opens and dumps its neurotransmitter.'},
+ {s:6,e:7.5,t:'Neurotransmitter crosses the cleft',p:'Molecules diffuse across the ~20 nm synaptic cleft (drawn much wider here). This takes well under a millisecond.'},
+ {s:7.5,e:10,t:'Receptors bind and open',p:'Transmitter binds ligand-gated receptors on the postsynaptic membrane. Their channels open and ions flow, creating a postsynaptic potential.'},
+ {s:10,e:12.5,t:'Signal is cleared',p:'Transmitter unbinds and is removed by reuptake transporters, diffusion away, or (for ACh) breakdown by acetylcholinesterase.'},
+ {s:12.5,e:14.5,t:'Vesicles are recycled',p:'Membrane is pulled back in by endocytosis (clathrin), refilled with transmitter, and the vesicle docks again, ready for the next spike.'}
+];
+const TEND=14.5;
+function lathe(pts,color,op){const g=new THREE.LatheGeometry(pts.map(p=>new THREE.Vector2(p[0],p[1])),56);return new THREE.Mesh(g,new THREE.MeshStandardMaterial({color,transparent:true,opacity:op,side:THREE.DoubleSide,depthWrite:false,roughness:0.45}));}
+const PRE=[[0.001,0.32],[0.6,0.33],[1.05,0.38],[1.4,0.55],[1.6,0.9],[1.62,1.35],[1.45,1.85],[1.1,2.3],[0.6,2.65],[0.38,3.0],[0.32,3.6],[0.3,4.6]];
+const POST=[[0.001,-0.32],[0.6,-0.33],[1.1,-0.38],[1.5,-0.55],[1.75,-0.95],[1.75,-1.5],[1.4,-2.0],[0.9,-2.3],[0.5,-2.5],[0.42,-3.0],[0.42,-3.6]];
+function preR(y){for(let i=0;i<PRE.length-1;i++){const a=PRE[i],b=PRE[i+1];if(y>=a[1]&&y<=b[1])return lerp(a[0],b[0],(y-a[1])/(b[1]-a[1]));}return 0.3;}
+const pre=addPick(sy,sy.scene,lathe(PRE,0xffb86b,0.3),'pre');pre.userData.pickAlways=true;
+const post=addPick(sy,sy.scene,lathe(POST,0x7cc6fe,0.3),'post');post.userData.pickAlways=true;
+const az=addPick(sy,sy.scene,new THREE.Mesh(new THREE.CylinderGeometry(0.95,1.0,0.04,48),new THREE.MeshStandardMaterial({color:0xb4793a,transparent:true,opacity:0.85,roughness:0.6})),'az');az.position.y=0.35;
+const psd=addPick(sy,sy.scene,new THREE.Mesh(new THREE.CylinderGeometry(1.0,0.95,0.05,48),new THREE.MeshStandardMaterial({color:0x2f6ea5,transparent:true,opacity:0.9,roughness:0.6})),'psd');psd.position.y=-0.355;
+const cleft=addPick(sy,sy.scene,new THREE.Mesh(new THREE.CylinderGeometry(1.05,1.05,0.55,40),new THREE.MeshBasicMaterial({color:0x5eead4,transparent:true,opacity:0.03,depthWrite:false})),'cleft');cleft.userData.pickAlways=true;
+const R3=rng(42);
+const ntMat=new THREE.MeshStandardMaterial({color:0xa3e635,emissive:0x3a5a00,roughness:0.4});
+const vesMat=new THREE.MeshStandardMaterial({color:0xfff1c9,transparent:true,opacity:0.5,roughness:0.3,depthWrite:false});
+const DOCK=[[-0.45,0.58,0.1],[0.12,0.58,-0.42],[0.46,0.58,0.26],[-0.05,0.58,0.5]];
+const vesicles=[];
+function mkVes(p,docked){const v=new THREE.Mesh(new THREE.SphereGeometry(0.17,20,14),vesMat.clone());v.position.set(...p);
+  for(let i=0;i<7;i++){const d=new THREE.Mesh(new THREE.SphereGeometry(0.035,8,6),ntMat);d.position.set((R3()-0.5)*0.18,(R3()-0.5)*0.18,(R3()-0.5)*0.18);v.add(d);}
+  addPick(sy,sy.scene,v,'vesicle');vesicles.push({m:v,base:V3(...p),docked,ph:R3()*6.28});}
+DOCK.forEach(p=>mkVes(p,true));
+for(let i=0;i<14;i++){let p;do{const y=0.95+R3()*1.15;const r=(preR(y)-0.32)*Math.sqrt(R3());const a=R3()*6.28;p=[Math.cos(a)*r,y,Math.sin(a)*r];}while(false);mkVes(p,false);}
+const caCh=[];for(let k=0;k<6;k++){const a=k/6*Math.PI*2+0.3;const m=new THREE.Mesh(new THREE.CylinderGeometry(0.08,0.08,0.28,14),new THREE.MeshStandardMaterial({color:0x22d3ee,roughness:0.4}));
+  m.position.set(Math.cos(a)*0.98,0.37,Math.sin(a)*0.98);m.rotation.z=Math.cos(a)*0.3;m.rotation.x=-Math.sin(a)*0.3;addPick(sy,sy.scene,m,'cachan');caCh.push(m);}
+const RECP=[[0,0],[0.5,0.3],[-0.5,0.3],[0.5,-0.3],[-0.5,-0.3],[0,0.62],[0,-0.62]];
+const recs=RECP.map(([x,z])=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,0.28,14),new THREE.MeshStandardMaterial({color:0xf472b6,roughness:0.4}));m.position.set(x,-0.36,z);return addPick(sy,sy.scene,m,'receptor');});
+const TRP=[[1.32,0.5,0.25,-0.9],[-1.2,0.5,0.6,0.9]];
+const trs=TRP.map(([x,y,z,rz])=>{const m=new THREE.Mesh(new THREE.CylinderGeometry(0.1,0.1,0.3,14),new THREE.MeshStandardMaterial({color:0x4ade80,roughness:0.4}));m.position.set(x,y,z);m.rotation.z=rz;return addPick(sy,sy.scene,m,'transporter');});
+// particles
+function pIM(n,mat){const im=new THREE.InstancedMesh(new THREE.SphereGeometry(1,10,8),mat,n);sy.scene.add(im);return im;}
+const NNT=40,NCA=30,NPI=30;
+const ntIM=pIM(NNT,ntMat),caIM=pIM(NCA,new THREE.MeshStandardMaterial({color:0xe0f7ff,emissive:0x0e7490,roughness:0.4}));
+const piMat=new THREE.MeshStandardMaterial({color:0xffb020,emissive:0x6a3c00,roughness:0.4});const piIM=pIM(NPI,piMat);
+const ntD=[],caD=[],piD=[];
+for(let i=0;i<NNT;i++)ntD.push({v:i%4,o:V3((R3()-0.5)*0.25,(R3()-0.5)*0.1,(R3()-0.5)*0.25),rc:i%7,j:V3((R3()-0.5)*0.12,0,(R3()-0.5)*0.12),dl:R3()*0.5,ub:R3(),fate:R3(),ph:R3()*6.28,
+  out:(()=>{const a=R3()*6.28;return V3(Math.cos(a)*2.3,(R3()-0.5)*0.3,Math.sin(a)*2.3);})()});
+for(let i=0;i<NCA;i++){const k=i%6,a=k/6*Math.PI*2+0.3+(R3()-0.5)*0.3;caD.push({s:V3(Math.cos(a)*1.25,0.12+R3()*0.12,Math.sin(a)*1.25),e:V3(Math.cos(a)*(0.4+R3()*0.5),0.6+R3()*0.4,Math.sin(a)*(0.4+R3()*0.5)),dl:R3()*0.9});}
+for(let i=0;i<NPI;i++){const [x,z]=RECP[i%7];piD.push({s:V3(x+(R3()-0.5)*0.3,-0.05,z+(R3()-0.5)*0.3),e:V3(x*1.3+(R3()-0.5)*0.5,-0.8-R3()*0.6,z*1.3+(R3()-0.5)*0.5),dl:R3()*0.8});}
+const ring=new THREE.Mesh(new THREE.TorusGeometry(1,0.05,10,48),new THREE.MeshBasicMaterial({color:0xffe066,transparent:true,opacity:0.9,blending:THREE.AdditiveBlending,depthWrite:false}));ring.rotation.x=Math.PI/2;sy.scene.add(ring);
+const pr=(T,a,b)=>ease((T-a)/(b-a));
+function setInst(im,i,p,s){dummy.position.copy(p);dummy.scale.setScalar(Math.max(s,0.0001));dummy.updateMatrix();im.setMatrixAt(i,dummy.matrix);}
+function Vpost(T){const A=syS.inhib?-6:9;let s=0;if(T>7.8)s=ease((T-7.8)/1.2);if(T>10)s=1-ease((T-10)/2.5);return -70+A*s;}
+const _v=new THREE.Vector3(),_w=new THREE.Vector3();
+function renderSyn(){
+  const T=syS.T;
+  // AP ring
+  if(T<2){const y=4.4-4.0*pr(T,0,1.8);ring.visible=true;const r=preR(y)+0.02;ring.position.y=y;ring.scale.set(r,r,1);ring.material.opacity=0.9*(1-pr(T,1.6,2));}else ring.visible=false;
+  pre.userData.baseEm=T<2.4?(T>0.2?0x3a2400:0):0;
+  caCh.forEach(m=>{const open=T>=2&&T<4.5;m.userData.baseEm=open?0x0e7490:0;m.scale.set(open?1.3:1,1,open?1.3:1);});
+  recs.forEach(m=>{const open=T>=7.5&&T<10.5;m.userData.baseEm=open?0x9d174d:0;m.scale.set(open?1.3:1,1,open?1.3:1);});
+  trs.forEach(m=>{m.userData.baseEm=T>=10&&T<12.5?0x166534:0;});
+  const vp=Vpost(T);post.userData.baseEm=vp>-69.5?0x0b3d66:vp<-70.5?0x3b1d6b:0;
+  // vesicles
+  vesicles.forEach(v=>{const j=Math.sin(performance.now()/700+v.ph)*0.02;
+    if(!v.docked){v.m.position.set(v.base.x+j,v.base.y+j*0.5,v.base.z-j);v.m.scale.setScalar(1);v.m.visible=true;return;}
+    let p=v.base.clone(),s=1;
+    if(T>=4&&T<5)p.y=lerp(0.58,0.42,pr(T,4,5));
+    else if(T>=5&&T<6){p.y=0.42;s=1-pr(T,5,6);}
+    else if(T>=6&&T<12.5)s=0;
+    else if(T>=12.5){const k=pr(T,12.5,14.5);s=Math.max(0.02,k);p=V3(v.base.x*1.5,1.35,v.base.z*1.5).lerp(v.base,k);}
+    else p.y+=j;
+    v.m.position.copy(p);v.m.scale.setScalar(Math.max(s,0.001));v.m.visible=s>0.01;});
+  // neurotransmitter
+  for(let i=0;i<NNT;i++){const d=ntD[i];const D=DOCK[d.v];const S=_v.set(D[0],0.36,D[2]).add(d.o);const [rx,rz]=RECP[d.rc];const tgt=_w.set(rx,-0.17,rz).add(d.j);
+    let p=null,s=0.045;
+    if(T<5||T>=12.6){setInst(ntIM,i,S,0);continue;}
+    if(T<6){p=S.clone();p.y-=0.05*pr(T,5,6);s*=pr(T,5,5.6);}
+    else if(T<7.5){const k=pr(T,6+d.dl*0.6,7.3);p=S.clone().lerp(tgt,k);p.x+=Math.sin(T*9+d.ph)*0.06*(1-k);p.z+=Math.cos(T*8+d.ph)*0.06*(1-k);}
+    else if(T<10){p=tgt.clone();p.y+=Math.sin(T*12+d.ph)*0.012;if(d.ub<0.5&&T>9.2){p.y+=0.15*pr(T,9.2,10);}}
+    else{const k=pr(T,10,12.4);const tg=d.fate<0.45?V3(TRP[d.fate<0.22?0:1][0]*0.95,0.45,TRP[d.fate<0.22?0:1][2]):d.out;p=tgt.clone();p.y+=d.ub<0.5?0.15:0;p.lerp(tg,k);s*=d.fate<0.45?1-pr(T,11.8,12.5):1-pr(T,11.2,12.5);}
+    setInst(ntIM,i,p,s);}
+  ntIM.instanceMatrix.needsUpdate=true;
+  for(let i=0;i<NCA;i++){const d=caD[i];let s=0,p=d.s;
+    if(T>=2&&T<6.5){const k=pr(T,2+d.dl,3.4+d.dl);p=d.s.clone().lerp(d.e,k);s=0.04*(T<6?1:1-pr(T,6,6.5));}
+    setInst(caIM,i,p,s);}caIM.instanceMatrix.needsUpdate=true;
+  for(let i=0;i<NPI;i++){const d=piD[i];let s=0,p=d.s;
+    if(T>=7.8&&T<10.8){const k=pr(T,7.8+d.dl,9.3+d.dl);p=d.s.clone().lerp(d.e,k);s=0.042*(T<10?pr(T,7.8+d.dl,8+d.dl):1-pr(T,10,10.8));}
+    setInst(piIM,i,p,s);}piIM.instanceMatrix.needsUpdate=true;
+}
+function curStep(){for(let i=STEPS.length-1;i>=0;i--)if(syS.T>=STEPS[i].s-1e-6)return i;return 0;}
+const syHud=el('div','hud');stage.appendChild(syHud);sy.hud=syHud;
+syHud.innerHTML=`<div class="card phase"><div class="muted" style="font-size:12px" id="syN"></div><h3 id="syH"></h3><p id="syP"></p></div><div class="card"><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px"><span id="syGL">Postsynaptic potential</span><span id="syMv"></span></div><canvas id="syC" width="300" height="110" style="width:300px;max-width:100%;height:110px"></canvas></div>`;
+const syC=syHud.querySelector('#syC'),syX=syC.getContext('2d');
+function drawPSP(){const W=syC.width,H=syC.height,y=v=>H-10-(v+78)/(20)*(H-20);syX.clearRect(0,0,W,H);
+  syX.strokeStyle='rgba(255,255,255,.12)';syX.beginPath();syX.moveTo(0,y(-70));syX.lineTo(W,y(-70));syX.stroke();syX.fillStyle='#97a4bf';syX.font='10px Inter';syX.fillText('−70 mV',4,y(-70)-3);
+  syX.strokeStyle=syS.inhib?'#c084fc':'#a3e635';syX.lineWidth=2;syX.beginPath();for(let i=0;i<=W;i++){const T=i/W*TEND;const v=Vpost(T);i?syX.lineTo(i,y(v)):syX.moveTo(i,y(v));}syX.stroke();syX.lineWidth=1;
+  const cx=syS.T/TEND*W;syX.fillStyle='#fff';syX.beginPath();syX.arc(cx,y(Vpost(syS.T)),4,0,7);syX.fill();}
+function syncSynUI(){const i=curStep(),st=STEPS[i];syHud.querySelector('#syN').textContent=`Step ${i+1} of ${STEPS.length}`;syHud.querySelector('#syH').textContent=st.t;syHud.querySelector('#syP').textContent=st.p;
+  sy.side.querySelectorAll('.steps .item').forEach((e,k)=>e.classList.toggle('on',k===i));
+  const v=Vpost(syS.T);syHud.querySelector('#syMv').textContent=(v-(-70)>0.3?'+':v-(-70)<-0.3?'−':'')+Math.abs(v+70).toFixed(1)+' mV '+(syS.inhib?'(IPSP)':'(EPSP)');
+  const pb=sy.side.querySelector('#syPlay');if(pb)pb.textContent=syS.playing?'⏸ Pause':'▶ Play all';drawPSP();}
+sy.update=dt=>{
+  if(syS.playing){syS.T+=dt*syS.speed;if(syS.stopAt!==null&&syS.T>=syS.stopAt){syS.T=syS.stopAt-0.001;syS.playing=false;syS.stopAt=null;}if(syS.T>=TEND){syS.T=TEND;syS.playing=false;}}
+  renderSyn();syncSynUI();
+};
+function goStep(i){i=clamp(i,0,STEPS.length-1);syS.T=STEPS[i].s;syS.playing=true;syS.stopAt=STEPS[i].e;}
+function setInhib(b){syS.inhib=b;ntMat.color.setHex(b?0xc084fc:0xa3e635);ntMat.emissive.setHex(b?0x3b0764:0x3a5a00);piMat.color.setHex(b?0x6ee7b7:0xffb020);piMat.emissive.setHex(b?0x065f46:0x6a3c00);
+  sy.side.querySelector('#syE').classList.toggle('on',!b);sy.side.querySelector('#syI').classList.toggle('on',b);
+  sy.labels.forEach(l=>{if(l.kind==='nt')l.el.textContent=b?'GABA':'Glutamate';if(l.kind==='ion')l.el.textContent=b?'Cl⁻ entering':'Na⁺ entering';});
+  syHud.querySelector('#syGL').textContent=b?'Inhibitory postsynaptic potential':'Excitatory postsynaptic potential';
+  sy.info.ntrans=b?NT_GABA:NT_GLU;if(sy.selected==='ntrans')showInfo(sy.info.ntrans);}
+const NT_GLU={name:'Glutamate',group:'Neurotransmitter',color:'#a3e635',lead:'The main excitatory neurotransmitter in the brain.',does:['Binds AMPA receptors (Na⁺ in → fast EPSP) and NMDA receptors (Ca²⁺ in, important for learning)','Cleared mostly by transporters on neurons and astrocytes'],wrong:['Too much glutamate causes excitotoxicity, as in stroke'],fact:'NMDA receptors need both glutamate AND depolarization to open, which lets them act like "coincidence detectors" for learning (LTP).'};
+const NT_GABA={name:'GABA',group:'Neurotransmitter',color:'#c084fc',lead:'The main inhibitory neurotransmitter in the brain.',does:['Binds GABA-A receptors, which let Cl⁻ in and hyperpolarize the cell (IPSP)','Makes the postsynaptic cell less likely to fire'],wrong:['Too little inhibition is linked to seizures'],fact:'Benzodiazepines, barbiturates and alcohol all enhance GABA-A receptor activity.'};
+sy.info={
+ pre:{name:'Presynaptic terminal',group:'Sending neuron',color:'#ffb86b',lead:'The swollen end (bouton) of an axon, packed with vesicles and mitochondria.',does:['Converts an electrical signal (action potential) into a chemical one (transmitter release)','Contains the machinery for docking, fusing and recycling vesicles']},
+ post:{name:'Postsynaptic membrane',group:'Receiving neuron',color:'#7cc6fe',lead:'Usually a dendritic spine or shaft of the next neuron.',does:['Holds receptors that turn the chemical signal back into an electrical one','EPSPs and IPSPs from many synapses add up at the axon hillock']},
+ az:{name:'Active zone',group:'Release site',color:'#b4793a',lead:'A protein-dense patch of presynaptic membrane where vesicles dock and fuse.',does:['Lines up vesicles right next to Ca²⁺ channels so release is fast','SNARE proteins (synaptobrevin, syntaxin, SNAP-25) drive fusion'],fact:'Botulinum toxin (Botox) works by cutting SNARE proteins, blocking acetylcholine release.'},
+ psd:{name:'Postsynaptic density',group:'Receptor scaffold',color:'#2f6ea5',lead:'A thick protein mat under the postsynaptic membrane.',does:['Anchors receptors (scaffold proteins like PSD-95)','Holds signaling enzymes such as CaMKII that drive plasticity']},
+ cleft:{name:'Synaptic cleft',group:'Gap',color:'#5eead4',lead:'The tiny space between the two neurons, about 20 nm wide in real life.',does:['Transmitter diffuses across it in well under a millisecond'],fact:'At electrical synapses (gap junctions) the gap is only ~3.5 nm and ions pass directly between cells.'},
+ vesicle:{name:'Synaptic vesicle',group:'Transmitter package',color:'#fff1c9',lead:'Small membrane spheres (about 40 nm) filled with thousands of transmitter molecules.',does:['Each one releases a fixed "quantum" of transmitter','Docked vesicles at the active zone form the readily releasable pool'],fact:'Katz showed transmitter is released in quanta, earning a share of the 1970 Nobel Prize.'},
+ cachan:{name:'Voltage-gated Ca²⁺ channel',group:'Trigger',color:'#22d3ee',lead:'Opens when the action potential depolarizes the terminal.',does:['Ca²⁺ entry is the direct trigger for vesicle fusion','Ca²⁺ binds the sensor synaptotagmin'],wrong:['Lambert-Eaton syndrome: antibodies against these channels reduce transmitter release'],fact:'Gabapentin and pregabalin, common neuropathic pain drugs, bind the α2δ subunit of these channels.'},
+ receptor:{name:'Postsynaptic receptor',group:'Detector',color:'#f472b6',lead:'Proteins that bind transmitter and change the postsynaptic cell.',does:['Ionotropic receptors (e.g. AMPA, GABA-A) are ion channels: fast, millisecond responses','Metabotropic receptors (GPCRs) act through second messengers: slower but longer-lasting'],fact:'In myasthenia gravis, antibodies attack acetylcholine receptors at the neuromuscular junction.'},
+ transporter:{name:'Reuptake transporter',group:'Clean-up',color:'#4ade80',lead:'Pumps transmitter back into the presynaptic terminal or nearby glia.',does:['Ends the signal and recycles transmitter','Examples: SERT (serotonin), DAT (dopamine), EAATs (glutamate)'],fact:'SSRI antidepressants block SERT, and cocaine blocks DAT, so the transmitter lingers longer in the cleft.'},
+ vesicles_:{},ntrans:NT_GLU
+};
+(function(){
+  const S=sy.side;
+  S.innerHTML=`<div class="sec"><div class="btns"><button class="btn big" id="syPlay">▶ Play all</button><button class="btn" id="syPrev">◀ Step</button><button class="btn" id="syNext">Step ▶</button></div></div>
+  <div class="sec"><h3>Steps</h3><div class="list steps">${STEPS.map((s,i)=>`<div class="item" data-i="${i}"><span class="num">${i+1}</span><span>${s.t}</span></div>`).join('')}</div></div>
+  <div class="sec"><h3>Synapse type</h3><div class="btns"><button class="btn on" id="syE">Excitatory (glutamate)</button><button class="btn" id="syI">Inhibitory (GABA)</button></div></div>
+  <div class="sec"><div class="range"><label style="width:60px">Speed</label><input type="range" id="sySp" min="0.25" max="2.5" step="0.05" value="1"><span id="sySpV">1.0×</span></div><label class="tog">Labels<input type="checkbox" id="syLab" checked></label></div>`;
+  S.querySelector('#syPlay').onclick=()=>{if(syS.playing){syS.playing=false;}else{if(syS.T>=TEND-0.01)syS.T=0;syS.playing=true;syS.stopAt=null;}};
+  S.querySelector('#syPrev').onclick=()=>goStep(curStep()-1);
+  S.querySelector('#syNext').onclick=()=>{const i=curStep();goStep(syS.T>=STEPS[i].e-0.01||syS.T<=0?i+(syS.T<=0&&!syS.playing?0:1):i+1);};
+  S.querySelectorAll('.steps .item').forEach(e=>e.onclick=()=>goStep(+e.dataset.i));
+  S.querySelector('#syE').onclick=()=>setInhib(false);S.querySelector('#syI').onclick=()=>setInhib(true);
+  S.querySelector('#sySp').oninput=e=>{syS.speed=+e.target.value;S.querySelector('#sySpV').textContent=syS.speed.toFixed(1)+'×';};
+  S.querySelector('#syLab').onchange=e=>sy.showLabels=e.target.checked;
+})();
+addLabel(sy,'Presynaptic terminal',V3(1.2,2.4,0.4),'#ffb86b');addLabel(sy,'Postsynaptic neuron',V3(1.3,-1.9,0.4),'#7cc6fe');
+addLabel(sy,'Synaptic vesicle',()=>vesicles[6].m.position.clone().add(V3(0,0.25,0)),'#fff1c9');
+addLabel(sy,'Ca²⁺ channel',()=>caCh[0].position.clone().add(V3(0.15,0.2,0)),'#22d3ee');
+addLabel(sy,'Receptor',V3(0.5,-0.62,0.3),'#f472b6');addLabel(sy,'Reuptake transporter',V3(1.42,0.75,0.25),'#4ade80');
+addLabel(sy,'Synaptic cleft',V3(-1.25,0,0.2),'#5eead4');
+const ntL=addLabel(sy,'Glutamate',V3(0.2,0.05,0.5),'#a3e635',()=>syS.T>5.3&&syS.T<10);ntL.kind='nt';
+const ionL=addLabel(sy,'Na⁺ entering',V3(0.6,-1.05,0.6),'#ffb020',()=>syS.T>8&&syS.T<10.5);ionL.kind='ion';
+addLabel(sy,'Ca²⁺ influx',V3(-0.9,0.9,0.3),'#e0f7ff',()=>syS.T>2.3&&syS.T<6);
+// make NT particles pickable through a proxy: clicking the cleft while NT present shows NT info
+sy.onPick=id=>{if(id==='cleft'&&syS.T>5&&syS.T<12)id='ntrans';sy.selected=id;id&&sy.info[id]?showInfo(sy.info[id]):sy.intro();};
+sy.intro=()=>showInfo(sy.selected&&sy.info[sy.selected]?sy.info[sy.selected]:{name:'Chemical synaptic transmission',group:'Synapses',color:'#5eead4',lead:'How one neuron talks to the next: electrical → chemical → electrical. Press Play all, or walk through it one step at a time.',
+ extra:`<h4>Legend</h4><div class="legend"><span class="dot" style="background:#22d3ee"></span>Voltage-gated Ca²⁺ channel<span class="dot" style="background:#e0f7ff"></span>Ca²⁺ ions<span class="dot" style="background:#fff1c9"></span>Synaptic vesicle<span class="dot" style="background:#a3e635"></span>Neurotransmitter<span class="dot" style="background:#f472b6"></span>Postsynaptic receptor<span class="dot" style="background:#4ade80"></span>Reuptake transporter</div>
+ <h4>Try this</h4><ul><li>Switch to <b>Inhibitory (GABA)</b>: Cl⁻ enters instead of Na⁺ and the potential dips below rest.</li><li>Click the cleft during step 4 or 5 to read about the transmitter.</li></ul>`,
+ fact:'The whole sequence takes about 1 ms in a real synapse. It is slowed down roughly 10,000× here.'});
+
+/* ======================================================================
+   5. HISTORY
+   ====================================================================== */
+const HIST=[
+ {y:'c. 1700 BCE',era:'ancient',t:'Edwin Smith Papyrus',w:'Ancient Egyptian surgical text',d:'The oldest known written description of the brain, describing head injuries and noting that brain damage could affect other parts of the body.',m:'First evidence that the brain is linked to bodily function.'},
+ {y:'c. 400 BCE',era:'ancient',t:'Hippocrates: the brain is the seat of thought',w:'Hippocrates of Kos',d:'Argued that the brain, not the heart, is the organ of intelligence, and that epilepsy was a natural disease rather than a sacred one.',m:'Moved explanations of the mind toward biology.'},
+ {y:'c. 170 CE',era:'ancient',t:'Galen and the ventricles',w:'Galen of Pergamon',d:'Through animal dissections, he described cranial nerves and the ventricles. He thought "animal spirits" stored in the ventricles drove the body.',m:'His ideas dominated medicine for about 1,400 years.',go:['atlas','ventricles']},
+ {y:'1543',era:'early',t:'De humani corporis fabrica',w:'Andreas Vesalius',d:'Detailed human anatomy based on his own dissections, with beautifully drawn brain illustrations that corrected many of Galen\'s errors.',m:'Launched modern anatomy built on direct observation.'},
+ {y:'1664',era:'early',t:'Cerebri Anatome',w:'Thomas Willis',d:'The first major book on brain anatomy. He described the arterial ring now called the circle of Willis and helped popularize the term "neurology".',m:'Started tying specific functions to specific brain structures.'},
+ {y:'1791',era:'early',t:'Animal electricity',w:'Luigi Galvani',d:'Showed that electrical stimulation makes frog leg muscles twitch, suggesting that nerves carry electrical signals.',m:'The foundation of neurophysiology.',go:['action-potential']},
+ {y:'1848',era:'early',t:'Phineas Gage',w:'Railroad foreman in Vermont',d:'An iron rod shot through his left frontal lobe. He survived, but people who knew him said his personality changed dramatically.',m:'Famous early evidence linking the frontal lobe to personality and behavior.',go:['atlas','frontal']},
+ {y:'1861',era:'modern',t:'Broca\'s area',w:'Paul Broca',d:'His patient Leborgne ("Tan") could understand speech but only say one syllable. Autopsy showed damage in the left inferior frontal lobe.',m:'Strong evidence for localization of function in the cortex.',go:['atlas','frontal']},
+ {y:'1873',era:'modern',t:'The "black reaction" stain',w:'Camillo Golgi',d:'A silver chromate stain that randomly fills a few neurons completely, revealing their full shape in black for the first time.',m:'Made it possible to actually see individual neurons.',go:['neurons']},
+ {y:'1874',era:'modern',t:'Wernicke\'s area',w:'Carl Wernicke',d:'Described patients with fluent but meaningless speech and poor comprehension, linked to the left superior temporal lobe.',m:'Showed language depends on a network of regions.',go:['atlas','temporal']},
+ {y:'1888',era:'modern',t:'The neuron doctrine',w:'Santiago Ramón y Cajal',d:'Using Golgi\'s stain, he argued that neurons are separate cells that communicate at contact points, rather than one continuous net. He also realized signals flow in one direction. Cajal and Golgi shared the 1906 Nobel Prize while disagreeing on this.',m:'The founding idea of modern neuroscience.',go:['neurons']},
+ {y:'1897',era:'modern',t:'The word "synapse"',w:'Charles Sherrington',d:'Named the junction between neurons the synapse and studied how reflexes integrate excitation and inhibition. Nobel Prize 1932.',m:'Gave us the concept of neurons as integrators.',go:['synapse']},
+ {y:'1921',era:'modern',t:'Chemical neurotransmission',w:'Otto Loewi',d:'Stimulated the vagus nerve of a frog heart, moved the fluid onto a second heart, and it slowed too. The chemical ("Vagusstoff") turned out to be acetylcholine. Nobel Prize 1936 with Henry Dale.',m:'Proved neurons communicate with chemicals.',go:['synapse']},
+ {y:'1929',era:'modern',t:'The human EEG',w:'Hans Berger',d:'Published recordings of electrical brain waves from the human scalp, including the alpha rhythm.',m:'The first window into living human brain activity.'},
+ {y:'1949',era:'modern',t:'Hebbian learning',w:'Donald Hebb',d:'Proposed that when one neuron repeatedly helps fire another, the connection between them strengthens ("cells that fire together wire together").',m:'The core idea behind synaptic plasticity and learning.'},
+ {y:'1952',era:'modern',t:'Hodgkin-Huxley model',w:'Alan Hodgkin & Andrew Huxley',d:'Using the squid giant axon and the voltage clamp, they described the action potential with equations for separate Na⁺ and K⁺ currents. Nobel Prize 1963 (with John Eccles).',m:'Still the basis for how we understand the action potential.',go:['action-potential']},
+ {y:'1954',era:'modern',t:'Quantal release',w:'Bernard Katz, José del Castillo, Paul Fatt',d:'Found that transmitter is released in fixed packets (quanta), matching the vesicles later seen in electron micrographs. Katz shared the 1970 Nobel Prize.',m:'Explained how vesicles carry the chemical signal.',go:['synapse']},
+ {y:'1957',era:'modern',t:'Patient H.M.',w:'William Scoville & Brenda Milner',d:'After both medial temporal lobes were removed to treat epilepsy, Henry Molaison could no longer form new long-term memories, but could still learn motor skills.',m:'Showed the hippocampus is essential for forming new memories, and that there are multiple memory systems.',go:['atlas','hippocampus']},
+ {y:'1959',era:'modern',t:'Feature detectors in visual cortex',w:'David Hubel & Torsten Wiesel',d:'Recorded from cat V1 and found neurons tuned to edges at specific orientations. Nobel Prize 1981.',m:'Revealed how the cortex builds vision step by step.',go:['atlas','occipital']},
+ {y:'1971',era:'contemporary',t:'Place cells',w:'John O\'Keefe',d:'Found hippocampal neurons that fire only when a rat is in a particular location. May-Britt and Edvard Moser later found grid cells (2005), and all three shared the 2014 Nobel Prize.',m:'Discovered the brain\'s internal GPS.',go:['atlas','hippocampus']},
+ {y:'1976',era:'contemporary',t:'Patch clamp',w:'Erwin Neher & Bert Sakmann',d:'Recorded currents through single ion channels for the first time. Nobel Prize 1991.',m:'Proved ion channels exist as individual molecular pores.',go:['action-potential']},
+ {y:'1990',era:'contemporary',t:'BOLD fMRI',w:'Seiji Ogawa and colleagues',d:'Showed that MRI can detect changes in blood oxygenation, which became the basis of functional MRI.',m:'Made non-invasive mapping of human brain activity routine.'},
+ {y:'2005',era:'contemporary',t:'Optogenetics',w:'Edward Boyden, Karl Deisseroth and colleagues',d:'Put light-sensitive channelrhodopsin into neurons so they can be switched on with flashes of light.',m:'Lets researchers control specific cell types with millisecond precision.'}
+];
+const ERAS={all:'All',ancient:'Ancient',early:'1500s–1800s',modern:'1860–1960',contemporary:'1970–today'};
+const ECOL={ancient:'#f8b56b',early:'#f472b6',modern:'#a78bfa',contemporary:'#5eead4'};
+function renderHistory(era){
+  const W=$('#hwrap');
+  W.innerHTML=`<h1>A short history of neuroscience</h1><p>From Egyptian surgeons to optogenetics. Click a card to expand it, and jump into the 3D view when there's something to see.</p>
+  <div class="chips">${Object.entries(ERAS).map(([k,v])=>`<button class="btn${k===era?' on':''}" data-e="${k}">${v}</button>`).join('')}</div><div class="tl"></div>`;
+  const tl=W.querySelector('.tl');
+  HIST.filter(h=>era==='all'||h.era===era).forEach(h=>{
+    const e=el('div','ev',`<div class="card"><div class="yr">${h.y}</div><h3>${h.t}</h3><div class="who">${h.w}</div><div class="more"><p style="margin:0 0 8px">${h.d}</p><p class="muted" style="margin:0"><b style="color:var(--text)">Why it matters:</b> ${h.m}</p>${h.go&&['action-potential','neurons'].includes(h.go[0])?`<button class="btn go">See it in 3D →</button>`:''}</div></div>`);
+    e.style.setProperty('--c',ECOL[h.era]);
+    e.onclick=ev=>{if(ev.target.classList.contains('go')){ev.stopPropagation();setTab(h.go[0]);if(h.go[1])setTimeout(()=>atlasSelect(h.go[1],true),50);return;}e.classList.toggle('open');};
+    tl.appendChild(e);
+  });
+  W.querySelectorAll('[data-e]').forEach(b=>b.onclick=()=>renderHistory(b.dataset.e));
+}
+renderHistory('all');
+
+/* ---------------- tabs + loop ---------------- */
+const side=$('#side');
+const ENABLED=['history','action-potential','neurons','about'];
+function setTab(name){
+  if(!ENABLED.includes(name))name=ENABLED[0];
+  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('on',b.dataset.tab===name));
+  try{if(location.hash.slice(1)!==name)history.replaceState(null,'','#'+name);}catch(e){try{location.hash=name;}catch(_){}}
+  const isH=name==='history'||name==='about';$('#app').style.display=isH?'none':'';$('#history').classList.toggle('on',name==='history');$('#about').classList.toggle('on',name==='about');
+  for(const k in modules){const m=modules[k];m.controls.enabled=false;m.layer.style.display='none';if(m.hud)m.hud.classList.remove('on');}
+  tip.style.display='none';
+  gcTrack(location.pathname+'#'+name,document.title+' · '+name);
+  if(isH){active=null;return;}
+  active=modules[name];active.controls.enabled=true;if(active.hud)active.hud.classList.add('on');
+  side.innerHTML='';side.appendChild(active.side);
+  if(name==='neurons'&&!neu.built){neu.built=true;buildNeuron(nType);window._renderParts();}
+  resize();active.intro&&active.intro();
+}
+document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+window.addEventListener('hashchange',()=>setTab(location.hash.slice(1)));
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.05,(now-last)/1000);last=now;
+  if(active){runTween(active,dt);active.controls.update();active.update&&active.update(dt);applyHighlights(active);renderer.render(active.scene,active.camera);updateLabels(active);}
+  requestAnimationFrame(loop);
+}
+setTab(location.hash.slice(1)||ENABLED[0]);
+document.getElementById('brand').onclick=()=>setTab('about');
+document.querySelectorAll('#about [data-go]').forEach(c=>c.onclick=()=>setTab(c.dataset.go));
+requestAnimationFrame(loop);
+window.__neuro={setTab,atlasSelect,goStep,stimulate,apS,syS};
+})();
+</script>
+</body>
+</html>
