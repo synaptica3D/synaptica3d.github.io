@@ -11,6 +11,7 @@
 :root{--bg:#0a0f1d;--panel:#10182b;--panel2:#172240;--line:#24324f;--text:#e8edf7;--muted:#97a4bf;--accent:#5eead4;--warm:#f8b56b;--pink:#f472b6}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
+html{background:#0a0f1d}
 body{background:radial-gradient(1200px 800px at 60% 25%,#172345 0%,#0a0f1d 62%) fixed;color:var(--text);font:14px/1.5 Inter,system-ui,sans-serif;overflow:hidden}
 h1,h2,h3{font-family:Fraunces,Georgia,serif;font-weight:600;letter-spacing:.2px;margin:0}
 header{height:58px;display:flex;align-items:center;gap:22px;padding:0 18px;border-bottom:1px solid var(--line);background:rgba(10,15,29,.9);position:relative;z-index:10}
@@ -30,6 +31,7 @@ nav button.on{color:var(--text);background:var(--panel2);box-shadow:inset 0 -2px
 .lbl{position:absolute;left:0;top:0;font-size:11.5px;font-weight:500;padding:2px 8px;border-radius:999px;background:rgba(10,15,29,.8);border:1px solid rgba(255,255,255,.14);white-space:nowrap;color:var(--text)}
 .lbl::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--c,#fff);margin-right:6px;vertical-align:1px}
 #tip{position:absolute;pointer-events:none;background:#0b1222;border:1px solid var(--line);border-radius:8px;padding:4px 9px;font-size:12px;display:none;z-index:4;white-space:nowrap}
+#hudDock{display:none}
 #hint{position:absolute;left:50%;top:12px;transform:translateX(-50%);font-size:12px;color:var(--muted);background:rgba(10,15,29,.7);border:1px solid var(--line);padding:5px 12px;border-radius:999px;pointer-events:none;white-space:nowrap}
 .hud{position:absolute;left:14px;bottom:14px;right:14px;display:none;gap:12px;align-items:flex-end;pointer-events:none;flex-wrap:wrap}
 .hud.on{display:flex}
@@ -102,8 +104,12 @@ input[type=search]{width:100%;background:#0b1222;border:1px solid var(--line);co
   body{overflow:auto}
   #app{grid-template-columns:1fr;height:auto}
   #stage{order:1;height:62vh}
-  #info{order:2;border-left:0;border-top:1px solid var(--line)}
+  #hudDock{order:2;display:block}
+  #hudDock .hud{position:static;padding:12px 14px 0;flex-direction:column;align-items:stretch}
+  #hudDock .hud .phase{max-width:none}
   #side{order:3;border-right:0;border-top:1px solid var(--line)}
+  #info{order:4;border-left:0;border-top:1px solid var(--line)}
+  #hint{display:none}
   #history,#about{height:auto}
   .hud{flex-direction:column;align-items:stretch}
 }
@@ -127,6 +133,7 @@ input[type=search]{width:100%;background:#0b1222;border:1px solid var(--line);co
     <div id="tip"></div>
     <div id="hint">Drag to rotate · scroll or pinch to zoom · right-drag to pan · click anything</div>
   </section>
+  <div id="hudDock"></div>
   <aside id="info"></aside>
 </main>
 <section id="history"><div class="hwrap" id="hwrap"></div></section>
@@ -1150,6 +1157,9 @@ function setTab(name){
   resize();active.intro&&active.intro();
 }
 document.querySelectorAll('#nav button').forEach(b=>b.onclick=()=>setTab(b.dataset.tab));
+const narrowMQ=window.matchMedia('(max-width:1150px)');
+function placeHuds(){const dock=narrowMQ.matches?$('#hudDock'):stage;for(const k in modules){const h=modules[k].hud;if(h&&h.parentNode!==dock)dock.appendChild(h);}resize();}
+placeHuds();if(narrowMQ.addEventListener)narrowMQ.addEventListener('change',placeHuds);else narrowMQ.addListener(placeHuds);
 window.addEventListener('hashchange',()=>setTab(location.hash.slice(1)));
 let last=performance.now();
 function loop(now){
